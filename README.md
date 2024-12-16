@@ -56,8 +56,8 @@ Voici ce que notre application met à disposition :
 ### 2. **Clonez le Dépôt**
 
 ```bash
-git clone <https://github.com/votre-utilisateur/nom-du-projet.git>
-cd nom-du-projet
+git clone <https://github.com/AbelGrossman/InfinitQuizz>
+cd InfinitQuizz
 
 ```
 
