@@ -8,9 +8,11 @@
   <packaging>pom</packaging>
   <name>project-m1</name>
   <modules>
-    <module>ticket-master</module>
-    <module>ticket-vendor</module>
-    <module>ticket-commons</module>
+    <module>creation-partie</module>
+    <module>questions</module>
+    <module>deroule-jeu</module>
+    <module>statistiques</module>
+    <module>matchmaking</module>
   </modules>
   <dependencyManagement>
     <dependencies>
