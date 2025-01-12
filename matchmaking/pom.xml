@@ -38,8 +38,12 @@
     </dependencyManagement>
     <dependencies>
         <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-smallrye-reactive-messaging-kafka</artifactId>
+        </dependency>
+        <dependency>
             <groupId>fr.pantheonsorbonne.ufr27.miage</groupId>
-            <artifactId>ticket-commons</artifactId>
+            <artifactId>commons</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
