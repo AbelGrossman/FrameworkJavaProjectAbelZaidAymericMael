@@ -5,9 +5,13 @@ public class User {
     private String theme;
     private int mmr;
 
-    public User(String id, String theme, int mmr) {
+    public User(String id, String theme) {
         this.id = id;
         this.theme = theme;
+    }
+
+    public User(String id, String theme, int mmr) {
+        this(id, theme);
         this.mmr = mmr;
     }
 
