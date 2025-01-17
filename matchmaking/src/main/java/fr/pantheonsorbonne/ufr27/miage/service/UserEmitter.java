@@ -18,3 +18,13 @@ public class TeamEmitter {
     }
 }
 
+@ApplicationScoped
+public class UserEmitter {
+
+    @Inject
+    ProducerTemplate producerTemplate;
+
+    public void sendTeamToCreationPartie(List<User> team) {
+            producerTemplate.sendBody("direct:zai", team);
+    }
+}

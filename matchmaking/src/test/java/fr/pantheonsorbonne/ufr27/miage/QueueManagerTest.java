@@ -10,7 +10,7 @@ import static org.mockito.Mockito.*;
 
 import fr.pantheonsorbonne.ufr27.miage.service.QueueManager;
 import fr.pantheonsorbonne.ufr27.miage.service.TeamEmitter;
-import fr.pantheonsorbonne.ufr27.miage.dto.User;
+import fr.pantheonsorbonne.ufr27.miage.dao.User;
 import fr.pantheonsorbonne.ufr27.miage.model.Queue;
 
 class QueueManagerTest {
