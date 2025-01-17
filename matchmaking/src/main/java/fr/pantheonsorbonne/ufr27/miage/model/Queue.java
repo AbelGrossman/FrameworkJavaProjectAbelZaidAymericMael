@@ -6,6 +6,8 @@ import java.util.ArrayList;
 public class Queue {
     private String theme;
     private List<User> players;
+    private int allowedMmrDifference = 20;
+
 
     public Queue(String theme) {
         this.theme = theme;
@@ -30,6 +32,14 @@ public class Queue {
 
     public boolean isFull() {
         return players.size() >= 50;
+    }
+
+    public void setAllowedMmrDifference(int allowedMmrDifference){
+        this.allowedMmrDifference = allowedMmrDifference; 
+    }
+
+    public int getAllowedMmrDifference(){
+        return this.allowedMmrDifference;
     }
 }
 
