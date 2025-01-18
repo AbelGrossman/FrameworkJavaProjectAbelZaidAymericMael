@@ -2,6 +2,7 @@ package fr.pantheonsorbonne.ufr27.miage.service;
 
 import fr.pantheonsorbonne.ufr27.miage.model.Queue;
 import fr.pantheonsorbonne.ufr27.miage.dto.User;
+import fr.pantheonsorbonne.ufr27.miage.dto.Team;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -11,7 +12,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import java.util.random.RandomGenerator;
 
 @ApplicationScoped
 public class QueueManager {
@@ -50,7 +51,7 @@ public class QueueManager {
         synchronized (queue) {
             List<User> players = queue.getPlayers();
             players.sort(Comparator.comparingInt(User::getMmr));
-    
+
             List<List<User>> teams = new ArrayList<>();
             List<User> currentTeam = new ArrayList<>();
             boolean teamFormed = false;
@@ -78,7 +79,8 @@ public class QueueManager {
             }
     
             // Emit all formed teams to creation-partie
-            for (List<User> team : teams) {
+            for (List<User> userList : teams) {
+                Team team = new Team(userList, 123123);
                 teamEmitter.sendTeamToCreationPartie(team);
             }
     

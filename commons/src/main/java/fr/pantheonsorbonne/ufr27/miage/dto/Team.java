@@ -1,12 +1,16 @@
+package fr.pantheonsorbonne.ufr27.miage.dto;
+
+import java.util.List;
+
 public class Team {
     private final List<User> users;
     private final String theme;
-    private Integer teamId;
+    private final Integer teamId;
 
     public Team(List<User> users, int teamId) {
         this.users = users;
         this.theme = users.get(0).getTheme();
-        this.teamId = ;
+        this.teamId = teamId;
     }
 
     public List<User> getUsers() {
