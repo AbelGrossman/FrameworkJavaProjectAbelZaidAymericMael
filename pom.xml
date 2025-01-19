@@ -13,6 +13,7 @@
     <module>deroule-jeu</module>
     <module>statistiques</module>
     <module>matchmaking</module>
+    <module>commons</module>
   </modules>
   <dependencyManagement>
     <dependencies>
