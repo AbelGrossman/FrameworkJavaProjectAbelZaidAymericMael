@@ -14,75 +14,61 @@ public class StatistiquesJoueur {
     @Column(name = "userId", nullable = false, unique = true, length = 50)
     private String userId;
 
-    @Column(name = "partiesJouees", nullable = false)
-    private Integer partiesJouees;
+    @Column(name = "nbVictoires")
+    private Integer nbVictoires;
 
-    @Column(name = "partiesGagnees", nullable = false)
-    private Integer partiesGagnees;
+    @Column(name = "nbPartie")
+    private Integer nbPartie;
 
-    @Column(name = "questionsBonnes", nullable = false)
-    private Integer questionsBonnes;
+    @Column(name = "mmr")
+    private Integer mmr;
 
-    @Column(name = "questionsTotales", nullable = false)
-    private Integer questionsTotales;
+    @Column(name = "scoreMoyen", nullable = false)
+    private Double scoreMoyen;
 
-    @Column(name = "pourcentageVictoire", nullable = false)
-    private Double pourcentageVictoire;
+    @Column(name = "tempsRepMoyen", nullable = false)
+    private Double tempsRepMoyen;
 
     // Getters and Setters
-    public Integer getId() {
-        return id;
+    public Integer getId() { return id;}
+
+    public void setId(Integer id) { this.id = id;}
+
+    public String getUserId() { return userId;}
+
+    public void setUserId(String userId) { this.userId = userId;
     }
 
-    public void setId(Integer id) {
-        this.id = id;
+    public Integer getNbVictoires() {return nbVictoires;}
+
+    public void setNbVictoires(Integer nbVictoires) {this.nbVictoires = nbVictoires;}
+
+
+    public Double getScoreMoyen() {return scoreMoyen;}
+
+    public void setScoreMoyen(Double scoreMoyen) {this.scoreMoyen = scoreMoyen;}
+
+    public Integer getNbPartie() {
+        return nbPartie;
     }
 
-    public String getUserId() {
-        return userId;
+    public void setNbPartie(Integer nbPartie) {
+        this.nbPartie = nbPartie;
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
+    public Double getTempsRepMoyen() {
+        return tempsRepMoyen;
     }
 
-    public Integer getPartiesJouees() {
-        return partiesJouees;
+    public void setTempsRepMoyen(Double tempsRepMoyen) {
+        this.tempsRepMoyen = tempsRepMoyen;
+    }
+    public Integer getMmr() {
+        return mmr;
     }
 
-    public void setPartiesJouees(Integer partiesJouees) {
-        this.partiesJouees = partiesJouees;
+    public void setMmr(Integer mmr ) {
+        this.mmr = mmr;
     }
 
-    public Integer getPartiesGagnees() {
-        return partiesGagnees;
-    }
-
-    public void setPartiesGagnees(Integer partiesGagnees) {
-        this.partiesGagnees = partiesGagnees;
-    }
-
-    public Integer getQuestionsBonnes() {
-        return questionsBonnes;
-    }
-
-    public void setQuestionsBonnes(Integer questionsBonnes) {
-        this.questionsBonnes = questionsBonnes;
-    }
-
-    public Integer getQuestionsTotales() {
-        return questionsTotales;
-    }
-
-    public void setQuestionsTotales(Integer questionsTotales) {
-        this.questionsTotales = questionsTotales;
-    }
-
-    public Double getPourcentageVictoire() {
-        return pourcentageVictoire;
-    }
-
-    public void setPourcentageVictoire(Double pourcentageVictoire) {
-        this.pourcentageVictoire = pourcentageVictoire;
-    }
 }

@@ -17,17 +17,20 @@ public class StatistiquesParTheme {
     @Column(name = "theme", nullable = false, length = 45)
     private String theme;
 
-    @Column(name = "partiesJouees", nullable = false)
-    private Integer partiesJouees;
+    @Column(name = "nbVictoires")
+    private Integer nbVictoires;
 
-    @Column(name = "partiesGagnees", nullable = false)
-    private Integer partiesGagnees;
+    @Column(name = "nbPartie")
+    private Integer nbPartie;
 
-    @Column(name = "questionsBonnes", nullable = false)
-    private Integer questionsBonnes;
+    @Column(name = "mmr")
+    private Integer mmr;
 
-    @Column(name = "questionsTotales", nullable = false)
-    private Integer questionsTotales;
+    @Column(name = "scoreMoyen", nullable = false)
+    private Double scoreMoyen;
+
+    @Column(name = "tempsRepMoyen", nullable = false)
+    private Double tempsRepMoyen;
 
     public String getUserId() {
         return userId;
@@ -45,35 +48,35 @@ public class StatistiquesParTheme {
         this.theme = theme;
     }
 
-    public Integer getPartiesJouees() {
-        return partiesJouees;
+    public Integer getNbVictoires() {return nbVictoires;}
+
+    public void setNbVictoires(Integer nbVictoires) {this.nbVictoires = nbVictoires;}
+
+
+    public Double getScoreMoyen() {return scoreMoyen;}
+
+    public void setScoreMoyen(Double scoreMoyen) {this.scoreMoyen = scoreMoyen;}
+
+    public Integer getNbPartie() {
+        return nbPartie;
     }
 
-    public void setPartiesJouees(Integer partiesJouees) {
-        this.partiesJouees = partiesJouees;
+    public void setNbPartie(Integer nbPartie) {
+        this.nbPartie = nbPartie;
     }
 
-    public Integer getPartiesGagnees() {
-        return partiesGagnees;
+    public Double getTempsRepMoyen() {
+        return tempsRepMoyen;
     }
 
-    public void setPartiesGagnees(Integer partiesGagnees) {
-        this.partiesGagnees = partiesGagnees;
+    public void setTempsRepMoyen(Double tempsRepMoyen) {
+        this.tempsRepMoyen = tempsRepMoyen;
+    }
+    public Integer getMmr() {
+        return mmr;
     }
 
-    public Integer getQuestionsBonnes() {
-        return questionsBonnes;
-    }
-
-    public void setQuestionsBonnes(Integer questionsBonnes) {
-        this.questionsBonnes = questionsBonnes;
-    }
-
-    public Integer getQuestionsTotales() {
-        return questionsTotales;
-    }
-
-    public void setQuestionsTotales(Integer questionsTotales) {
-        this.questionsTotales = questionsTotales;
+    public void setMmr(Integer mmr ) {
+        this.mmr = mmr;
     }
 }

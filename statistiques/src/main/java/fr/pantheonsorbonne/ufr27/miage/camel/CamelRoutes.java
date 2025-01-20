@@ -46,9 +46,10 @@ public class CamelRoutes extends RouteBuilder {
                     statistiquesService.updateStatistiques(
                             partieDetails.getUserId(),
                             partieDetails.getRangPartie(),
-                            partieDetails.getNbBonnesReponses(),
+                            partieDetails.getScorePartie(),
                             partieDetails.getNbQuestions(),
-                            partieDetails.getTheme()
+                            partieDetails.getTheme(),
+                            partieDetails.getTempsRepMoyen()
                     );
                 })
                 .log("Statistiques mises à jour pour l'utilisateur : ${body.userId}");
