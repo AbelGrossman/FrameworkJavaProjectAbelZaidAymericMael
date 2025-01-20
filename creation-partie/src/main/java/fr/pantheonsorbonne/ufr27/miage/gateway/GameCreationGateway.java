@@ -21,11 +21,12 @@ public class GameCreationGateway {
 
     public void handlePlayerRequest(String body, Exchange exchange) throws Exception {
         Map<String, Object> request = mapper.readValue(body, Map.class);
+        Long playerId = Long.valueOf((Integer) request.get("playerId"));
 
         try {
-            gameService.validateNewRequest(Long.valueOf((Integer) request.get("playerId")));
+            gameService.validateNewRequest(playerId);
+            gameService.createNewRequest(playerId);
 
-            // Envoie seulement playerId, theme et MMR au MatchMaking
             Map<String, Object> matchmakingRequest = Map.of(
                     "playerId", request.get("playerId"),
                     "theme", request.get("theme"),
@@ -33,11 +34,13 @@ public class GameCreationGateway {
             );
 
             exchange.getMessage().setBody(mapper.writeValueAsString(matchmakingRequest));
+
         } catch (DuplicateRequestException e) {
             exchange.getMessage().setBody(mapper.writeValueAsString(Map.of("error", e.getMessage())));
             exchange.getMessage().setHeader(Exchange.HTTP_RESPONSE_CODE, 409);
         }
     }
+
 
     public void storeTeamAndForwardToQuestions(String body, Exchange exchange) throws Exception {
         Map<String, Object> matchmakingResponse = mapper.readValue(body, Map.class);
@@ -49,8 +52,7 @@ public class GameCreationGateway {
         // Forward theme and difficulty to Questions service
         Map<String, Object> questionsRequest = Map.of(
                 "theme", matchmakingResponse.get("theme"),
-                "difficulty", matchmakingResponse.get("averageLevel"),
-                "groupId", groupId
+                "difficulty", matchmakingResponse.get("difficulty")
         );
 
         exchange.getMessage().setBody(mapper.writeValueAsString(questionsRequest));

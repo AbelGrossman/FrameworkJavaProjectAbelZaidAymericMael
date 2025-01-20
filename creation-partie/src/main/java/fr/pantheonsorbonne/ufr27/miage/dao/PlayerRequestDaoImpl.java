@@ -36,4 +36,10 @@ public class PlayerRequestDaoImpl implements PlayerRequestDao {
             em.merge(request);
         }
     }
+
+    @Override
+    @Transactional
+    public void persist(PlayerRequest request) {
+        em.persist(request);
+    }
 }

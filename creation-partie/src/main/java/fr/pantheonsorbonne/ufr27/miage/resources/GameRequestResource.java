@@ -27,37 +27,24 @@ public class GameRequestResource {
     @Path("/join")
     public Response joinGame(JoinGameRequest joinRequest) {
         try {
-            gameService.validateNewRequest(joinRequest.playerId());
-
-            // Prépare le message pour le MatchMaking
-            Map<String, Object> matchmakingRequest = Map.of(
-                    "playerId", joinRequest.playerId(),
-                    "theme", joinRequest.theme(),
-                    "mmr", joinRequest.mmr()
-            );
-
-            // Envoie à la queue Camel
-            String response = producerTemplate.requestBody(
-                    "sjms2:M1.MatchmakingService",
-                    mapper.writeValueAsString(matchmakingRequest),
-                    String.class
+            // Utiliser le gateway pour le traitement
+            producerTemplate.sendBody(
+                    "sjms2:M1.CreationPartieService",
+                    mapper.writeValueAsString(joinRequest)
             );
 
             return Response.ok(Map.of(
                     "message", "Join request accepted",
-                    "playerId", joinRequest.playerId(),
-                    "response", response
+                    "playerId", joinRequest.playerId()
             )).build();
 
         } catch (DuplicateRequestException e) {
-            return Response
-                    .status(Response.Status.CONFLICT)
+            return Response.status(Response.Status.CONFLICT)
                     .entity(Map.of("error", e.getMessage()))
                     .build();
         } catch (Exception e) {
-            return Response
-                    .status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(Map.of("error", "An unexpected error occurred: " + e.getMessage()))
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(Map.of("error", "An unexpected error occurred"))
                     .build();
         }
     }

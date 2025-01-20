@@ -4,4 +4,6 @@ public interface GameCreationService {
     void validateNewRequest(Long playerId);
     void cancelRequest(Long playerId);
     String getPlayerStatus(Long playerId);
+    void createNewRequest(Long playerId);
+
 }

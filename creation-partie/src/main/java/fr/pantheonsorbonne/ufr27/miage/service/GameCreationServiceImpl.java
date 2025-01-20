@@ -6,6 +6,9 @@ import fr.pantheonsorbonne.ufr27.miage.exception.DuplicateRequestException;
 import fr.pantheonsorbonne.ufr27.miage.model.PlayerRequest;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
+
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @ApplicationScoped
@@ -15,6 +18,7 @@ public class GameCreationServiceImpl implements GameCreationService {
     PlayerRequestDao playerRequestDao;
 
     @Override
+    @Transactional
     public void validateNewRequest(Long playerId) {
         Optional<PlayerRequest> existingRequest = playerRequestDao.findActiveRequestByPlayerId(playerId);
 
@@ -31,6 +35,16 @@ public class GameCreationServiceImpl implements GameCreationService {
                     break;
             }
         }
+    }
+
+    @Override
+    @Transactional
+    public void createNewRequest(Long playerId) {
+        PlayerRequest newRequest = new PlayerRequest();
+        newRequest.setPlayerId(playerId);
+        newRequest.setStatus("PENDING");
+        newRequest.setRequestTime(LocalDateTime.now());
+        playerRequestDao.persist(newRequest);
     }
 
     @Override
