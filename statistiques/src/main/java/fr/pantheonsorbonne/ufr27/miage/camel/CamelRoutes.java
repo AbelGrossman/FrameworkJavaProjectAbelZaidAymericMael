@@ -1,17 +1,7 @@
 package fr.pantheonsorbonne.ufr27.miage.camel;
 
-
-import fr.pantheonsorbonne.ufr27.miage.dao.NoSuchTicketException;
-import fr.pantheonsorbonne.ufr27.miage.dto.Booking;
-import fr.pantheonsorbonne.ufr27.miage.dto.ETicket;
-import fr.pantheonsorbonne.ufr27.miage.exception.CustomerNotFoundException;
-import fr.pantheonsorbonne.ufr27.miage.exception.ExpiredTransitionalTicketException;
-import fr.pantheonsorbonne.ufr27.miage.exception.UnsuficientQuotaForVenueException;
-import fr.pantheonsorbonne.ufr27.miage.service.TicketingService;
-import org.apache.camel.CamelContext;
-import org.apache.camel.CamelExecutionException;
-import org.apache.camel.Exchange;
-import org.apache.camel.Processor;
+import fr.pantheonsorbonne.ufr27.miage.dto.PartieDetails;
+import fr.pantheonsorbonne.ufr27.miage.service.StatistiquesService;
 import org.apache.camel.builder.RouteBuilder;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -21,79 +11,46 @@ import jakarta.inject.Inject;
 @ApplicationScoped
 public class CamelRoutes extends RouteBuilder {
 
-    @ConfigProperty(name = "camel.routes.enabled", defaultValue = "true")
-    boolean isRouteEnabled;
-
     @ConfigProperty(name = "fr.pantheonsorbonne.ufr27.miage.jmsPrefix")
     String jmsPrefix;
 
     @Inject
-    BookingGateway bookingHandler;
-
-    @Inject
-    TicketingService ticketingService;
-
-    @Inject
-    CamelContext camelContext;
+    StatistiquesService statistiquesService;
 
     @Override
     public void configure() throws Exception {
-
-        camelContext.setTracing(true);
-
-        onException(ExpiredTransitionalTicketException.class)
-                .handled(true)
-                .process(new ExpiredTransitionalTicketProcessor())
-                .setHeader("success", simple("false"))
-                .log("Clearning expired transitional ticket ${body}")
-                .bean(ticketingService, "cleanUpTransitionalTicket");
-
-        onException(UnsuficientQuotaForVenueException.class)
+        // Gestion des exceptions pour les données invalides
+        onException(Exception.class)
                 .handled(true)
                 .setHeader("success", simple("false"))
-                .setBody(simple("Vendor has not enough quota for this venue"));
+                .setBody(simple("Error processing statistiques: ${exception.message}"))
+                .log("Erreur : ${exception.message}");
 
+        // Route d'émission
+        //from("direct:sendStatistiques")
+        //       .marshal().json()
+        //        .to("sjms2:" + jmsPrefix + "partieStatistiques")
+        //        .log("Statistiques envoyées : ${body}");
 
-        onException(NoSuchTicketException.class)
-                .handled(true)
-                .setHeader("success", simple("false"))
-                .setBody(simple("Ticket has expired"));
+        // Route de réception
+        from("direct:statistiquesUpdate")
+                //.unmarshal().json(PartieDetails.class)
+                .process(exchange -> {
+                    PartieDetails partieDetails = exchange.getIn().getBody(PartieDetails.class);
 
-        onException(CustomerNotFoundException.NoSeatAvailableException.class)
-                .handled(true)
-                .setHeader("success", simple("false"))
-                .setBody(simple("No seat is available"));
+                    if (partieDetails == null || partieDetails.getUserId() == null || partieDetails.getTheme() == null) {
+                        throw new IllegalArgumentException("Missing required data (userId, theme, or other fields)");
+                    }
 
-
-        from("sjms2:" + jmsPrefix + "booking?exchangePattern=InOut")//
-                .autoStartup(isRouteEnabled)
-                .log("ticker received: ${in.headers}")//
-                .unmarshal().json(Booking.class)//
-                .bean(bookingHandler, "book").marshal().json()
-        ;
-
-
-        from("sjms2:" + jmsPrefix + "ticket?exchangePattern=InOut")
-                .autoStartup(isRouteEnabled)
-                .unmarshal().json(ETicket.class)
-                .bean(ticketingService, "emitTicket").marshal().json();
-
-
-        from("direct:ticketCancel")
-                .autoStartup(isRouteEnabled)
-                .marshal().json()
-                .to("sjms2:topic:" + jmsPrefix + "cancellation");
-
-    }
-
-    private static class ExpiredTransitionalTicketProcessor implements Processor {
-        @Override
-        public void process(Exchange exchange) throws Exception {
-            //https://camel.apache.org/manual/exception-clause.html
-            CamelExecutionException caused = (CamelExecutionException) exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Throwable.class);
-
-
-            exchange.getMessage().setBody(((ExpiredTransitionalTicketException) caused.getCause()).getExpiredTicketId());
-        }
+                    // Appel du service pour mettre à jour les statistiques
+                    statistiquesService.updateStatistiques(
+                            partieDetails.getUserId(),
+                            partieDetails.getRangPartie(),
+                            partieDetails.getNbBonnesReponses(),
+                            partieDetails.getNbQuestions(),
+                            partieDetails.getTheme()
+                    );
+                })
+                .log("Statistiques mises à jour pour l'utilisateur : ${body.userId}");
     }
 }
