@@ -1,9 +1,10 @@
 package fr.pantheonsorbonne.ufr27.miage.service;
 
-
 import fr.pantheonsorbonne.ufr27.miage.dao.PlayerRequestDao;
 import fr.pantheonsorbonne.ufr27.miage.exception.DuplicateRequestException;
+import fr.pantheonsorbonne.ufr27.miage.exception.PlayerNotFoundException;
 import fr.pantheonsorbonne.ufr27.miage.model.PlayerRequest;
+import fr.pantheonsorbonne.ufr27.miage.model.RequestStatus;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -19,21 +20,14 @@ public class GameCreationServiceImpl implements GameCreationService {
 
     @Override
     @Transactional
-    public void validateNewRequest(Long playerId) {
+    public void validateNewRequest(Long playerId) throws DuplicateRequestException {
+        // Vérifier d'abord si le joueur existe
+        if (!playerRequestDao.existsPlayer(playerId)) {
+            throw new PlayerNotFoundException("Player not found with ID: " + playerId);
+        }
         Optional<PlayerRequest> existingRequest = playerRequestDao.findActiveRequestByPlayerId(playerId);
-
         if (existingRequest.isPresent()) {
-            PlayerRequest request = existingRequest.get();
-            String status = request.getStatus();
-
-            switch (status) {
-                case "PENDING":
-                case "SENT_TO_MATCHMAKING":
-                case "IN_GAME":
-                    throw new DuplicateRequestException("Player already has an active request or is in game");
-                default:
-                    break;
-            }
+            throw new DuplicateRequestException("Player already has an active request or is in game");
         }
     }
 
@@ -42,20 +36,45 @@ public class GameCreationServiceImpl implements GameCreationService {
     public void createNewRequest(Long playerId) {
         PlayerRequest newRequest = new PlayerRequest();
         newRequest.setPlayerId(playerId);
-        newRequest.setStatus("PENDING");
+        newRequest.setStatus(RequestStatus.PENDING.name());
         newRequest.setRequestTime(LocalDateTime.now());
         playerRequestDao.persist(newRequest);
     }
 
     @Override
+    @Transactional
+    public void updateToMatchmaking(Long playerId) {
+        updateRequestStatus(playerId, RequestStatus.SENT_TO_MATCHMAKING);
+    }
+
+    @Override
+    @Transactional
+    public void updateToInGame(Long playerId) {
+        updateRequestStatus(playerId, RequestStatus.IN_GAME);
+    }
+
+    @Override
+    @Transactional
+    public void updateToFinished(Long playerId) {
+        updateRequestStatus(playerId, RequestStatus.FINISHED);
+    }
+
+    @Override
+    @Transactional
     public void cancelRequest(Long playerId) {
-        Optional<PlayerRequest> request = playerRequestDao.findActiveRequestByPlayerId(playerId);
-        request.ifPresent(playerRequest -> playerRequestDao.updateRequestStatus(playerRequest.getId(), "CANCELLED"));
+        updateRequestStatus(playerId, RequestStatus.CANCELLED);
     }
 
     @Override
     public String getPlayerStatus(Long playerId) {
         Optional<PlayerRequest> request = playerRequestDao.findActiveRequestByPlayerId(playerId);
-        return request.map(PlayerRequest::getStatus).orElse("NO_ACTIVE_REQUEST");
+        return request.map(PlayerRequest::getStatus).orElse(RequestStatus.NO_ACTIVE_REQUEST.name());
+    }
+
+    private void updateRequestStatus(Long playerId, RequestStatus newStatus) {
+        Optional<PlayerRequest> request = playerRequestDao.findActiveRequestByPlayerId(playerId);
+        request.ifPresent(playerRequest ->
+                playerRequestDao.updateRequestStatus(playerRequest.getId(), newStatus.name())
+        );
     }
 }

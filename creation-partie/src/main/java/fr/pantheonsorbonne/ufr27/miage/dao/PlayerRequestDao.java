@@ -7,5 +7,6 @@ public interface PlayerRequestDao {
     Optional<PlayerRequest> findActiveRequestByPlayerId(Long playerId);
     void updateRequestStatus(Long id, String status);
     void persist(PlayerRequest request);
+    boolean existsPlayer(Long playerId) ;
 
 }

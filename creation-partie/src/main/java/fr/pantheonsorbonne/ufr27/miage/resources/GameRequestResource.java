@@ -1,8 +1,13 @@
 package fr.pantheonsorbonne.ufr27.miage.resources;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import fr.pantheonsorbonne.ufr27.miage.dto.AuthResponse;
 import fr.pantheonsorbonne.ufr27.miage.dto.JoinGameRequest;
+import fr.pantheonsorbonne.ufr27.miage.dto.LoginRequest;
+import fr.pantheonsorbonne.ufr27.miage.dto.RegisterRequest;
 import fr.pantheonsorbonne.ufr27.miage.service.GameCreationService;
+import fr.pantheonsorbonne.ufr27.miage.service.AuthenticationService;
+
 import fr.pantheonsorbonne.ufr27.miage.exception.DuplicateRequestException;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -19,17 +24,29 @@ public class GameRequestResource {
     GameCreationService gameService;
 
     @Inject
+    AuthenticationService authService;
+
+    @Inject
     ProducerTemplate producerTemplate;
 
     private final ObjectMapper mapper = new ObjectMapper();
 
     @POST
-    @Path("/join")
-    public Response joinGame(JoinGameRequest joinRequest) {
+    @Path("/game/join")
+    public Response joinGame(@HeaderParam("Authorization") String token, JoinGameRequest joinRequest) {
         try {
-            // Utiliser le gateway pour le traitement
+            // Validate token and get playerId from it
+            // In a real application, you would decode and validate the JWT token
+            if (token == null || !token.startsWith("Bearer ")) {
+                return Response.status(Response.Status.UNAUTHORIZED)
+                        .entity(Map.of("error", "Invalid token"))
+                        .build();
+            }
+
+            gameService.validateNewRequest(joinRequest.playerId());
+
             producerTemplate.sendBody(
-                    "sjms2:M1.CreationPartieService",
+                    "direct:CreationPartieService",
                     mapper.writeValueAsString(joinRequest)
             );
 
@@ -38,13 +55,9 @@ public class GameRequestResource {
                     "playerId", joinRequest.playerId()
             )).build();
 
-        } catch (DuplicateRequestException e) {
-            return Response.status(Response.Status.CONFLICT)
-                    .entity(Map.of("error", e.getMessage()))
-                    .build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(Map.of("error", "An unexpected error occurred"))
+                    .entity(Map.of("error", e.getMessage()))
                     .build();
         }
     }
@@ -53,6 +66,10 @@ public class GameRequestResource {
     @Path("/leave/{playerId}")
     public Response leaveGame(@PathParam("playerId") Long playerId) {
         try {
+            producerTemplate.sendBody(
+                    "sjms2:M1.CreationPartieService",
+                    mapper.writeValueAsString(playerId)
+            );
             gameService.cancelRequest(playerId);
             return Response.ok(Map.of(
                     "message", "Successfully left the queue",
@@ -82,4 +99,32 @@ public class GameRequestResource {
                     .build();
         }
     }
+
+    @POST
+    @Path("/auth/register")
+    public Response register(RegisterRequest request) {
+        try {
+            AuthResponse response = authService.register(request);
+            return Response.ok(response).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", e.getMessage()))
+                    .build();
+        }
+    }
+
+    @POST
+    @Path("/auth/login")
+    public Response login(LoginRequest request) {
+        try {
+            AuthResponse response = authService.login(request);
+            return Response.ok(response).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(Map.of("error", e.getMessage()))
+                    .build();
+        }
+    }
+
+
 }

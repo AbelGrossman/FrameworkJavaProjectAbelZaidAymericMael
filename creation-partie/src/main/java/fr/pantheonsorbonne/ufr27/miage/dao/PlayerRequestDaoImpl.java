@@ -23,7 +23,6 @@ public class PlayerRequestDaoImpl implements PlayerRequestDao {
                         PlayerRequest.class)
                 .setParameter("playerId", playerId)
                 .getResultList();
-
         return activeRequests.isEmpty() ? Optional.empty() : Optional.of(activeRequests.get(0));
     }
 
@@ -41,5 +40,15 @@ public class PlayerRequestDaoImpl implements PlayerRequestDao {
     @Transactional
     public void persist(PlayerRequest request) {
         em.persist(request);
+    }
+
+    @Override
+    public boolean existsPlayer(Long playerId) {
+        Long count = em.createQuery(
+                        "SELECT COUNT(p) FROM Player p WHERE p.id = :playerId",
+                        Long.class)
+                .setParameter("playerId", playerId)
+                .getSingleResult();
+        return count > 0;
     }
 }
