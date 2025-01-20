@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
-/*
+
 @QuarkusTest
 class APITest {
 
@@ -90,4 +90,3 @@ class APITest {
         assertEquals("La difficulté ne peut pas être nulle ou vide.", exception.getMessage());
     }
 }
-*/

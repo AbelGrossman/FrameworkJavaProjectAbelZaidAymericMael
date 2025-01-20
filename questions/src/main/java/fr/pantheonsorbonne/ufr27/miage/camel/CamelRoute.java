@@ -17,6 +17,7 @@ public class CamelRoute extends RouteBuilder {
 
     @Override
     public void configure() throws Exception {
+        /*
         from("direct:fetchQuestions")
                 .routeId("fetchTriviaQuestionsRoute")
                 .log("Fetching questions for category: ${header.category}, difficulty: ${header.difficulty}")
@@ -28,15 +29,23 @@ public class CamelRoute extends RouteBuilder {
 
                     exchange.getMessage().setBody(questions);
                 })
-                .log("Returning questions: ${body}") ;
-             /*   .to("direct:sendQuestions");
+                .log("Returning questions: ${body}");
+         */
 
-        // Route to send questions to the destination - it's abstract and need to wait Creation de Partie to be implemented
-        from("direct:sendQuestions")
-                .routeId("sendTriviaQuestionsRoute")
-                .log("Sending questions: ${body}")
-                .to("mock:result"); */
+        from("sjms2:fetchQuestions")
+                .log("Réponse de la requête : ${body}")
+                .bean(questionServices, "askAPIQuestions")
+                .log("Fetching questions for category: ${header.theme}, difficulty: ${header.difficulty}")
+                .process(exchange -> {
+                    String category = exchange.getMessage().getHeader("theme", String.class);
+                    String difficulty = exchange.getMessage().getHeader("difficulty", String.class);
 
+                    List<QuestionDTO> questions = questionServices.askAPIQuestions(category, difficulty);
+
+                    exchange.getMessage().setBody(questions);
+                })
+                .log("Returning questions: ${body}")
+                .to("sjms2:fetchQuestionsResponses");
     }
 
 }

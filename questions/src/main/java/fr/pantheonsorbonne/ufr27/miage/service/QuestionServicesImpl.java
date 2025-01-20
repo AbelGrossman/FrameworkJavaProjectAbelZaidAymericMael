@@ -19,6 +19,8 @@ public class QuestionServicesImpl implements QuestionServices {
     @Override
     public List<QuestionDTO> askAPIQuestions(String category, String difficulty) {
         validateParameters(category, difficulty);
+        category = category.toLowerCase();
+        difficulty = difficulty.toLowerCase();
         return fetchQuestions(category, difficulty);
     }
 
