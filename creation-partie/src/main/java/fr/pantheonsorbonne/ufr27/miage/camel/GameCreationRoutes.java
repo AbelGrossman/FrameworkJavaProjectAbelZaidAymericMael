@@ -19,35 +19,23 @@ public class GameCreationRoutes extends RouteBuilder {
     public void configure() {
         // Route vers MatchMaking
         from("sjms2:M1.CreationPartieService")
-                .log("Nouvelle demande de joueur reçue : ${body}").process(exchange -> {
-                    Map<String, Object> questionsRequest = Map.of(
-                            "theme", "science",
-                            "difficulty", "medium"
-                    );
-                    ObjectMapper mapper = new ObjectMapper();
-                    exchange.getMessage().setBody(mapper.writeValueAsString(questionsRequest));
+                .log("Nouvelle demande de joueur reçue : ${body}")
+                .process(exchange -> {
+                    exchange.getMessage().setHeader("theme", "science");
+                    exchange.getMessage().setHeader("difficulty", "medium");
                 })
-                .log("Envoi du message de test au service Questions : ${body}")
-                .to("sjms2:QuestionsService");
+                .log("Envoi du message de test au service Questions avec category: ${header.theme}, difficulty: ${header.difficulty}")
+                .to("sjms2:fetchQuestions");
                 /*.bean(gateway, "handlePlayerRequest")
                 .to("sjms2:M1.MatchmakingService");*/
 
-       /* from("direct:test-questions")
-                .process(exchange -> {
-                    Map<String, Object> questionsRequest = Map.of(
-                            "theme", "science",
-                            "difficulty", "medium"
-                    );
-                    ObjectMapper mapper = new ObjectMapper();
-                    exchange.getMessage().setBody(mapper.writeValueAsString(questionsRequest));
-                })
-                .log("Envoi du message de test au service Questions : ${body}")
-                .to("sjms2:QuestionsService");*/
+
 
         // Route de réception du MatchMaking vers Questions
         from("sjms2:M1.CreationPartieService")
                 .log("Réponse du MatchMaking reçue : ${body}")
                 .bean(gateway, "storeTeamAndForwardToQuestions")
+                .marshal().json()
                 .to("sjms2:fetchQuestions");
 
         // Questions -> GameExecution

@@ -34,7 +34,7 @@ public class CamelRoute extends RouteBuilder {
 
         from("sjms2:fetchQuestions")
                 .log("Réponse de la requête : ${body}")
-                .bean(questionServices, "askAPIQuestions")
+                //.bean(questionServices, "askAPIQuestions")
                 .log("Fetching questions for category: ${header.theme}, difficulty: ${header.difficulty}")
                 .process(exchange -> {
                     String category = exchange.getMessage().getHeader("theme", String.class);
@@ -45,6 +45,7 @@ public class CamelRoute extends RouteBuilder {
                     exchange.getMessage().setBody(questions);
                 })
                 .log("Returning questions: ${body}")
+                .marshal().json()
                 .to("sjms2:fetchQuestionsResponses");
     }
 
