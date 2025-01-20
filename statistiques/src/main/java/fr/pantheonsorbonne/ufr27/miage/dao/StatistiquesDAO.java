@@ -8,10 +8,10 @@ public interface StatistiquesDAO {
     StatistiquesJoueur getStatistiquesJoueur(String userId);
 
     StatistiquesJoueur createOrUpdateStatistiquesJoueur(
-            String userId, int partiesJouees, int partiesGagnees, int questionsBonnes, int questionsTotales);
+            String userId, int nbVictoire, int mmr, double scoreMoyen, double TempRepMoyen, int nbPartie);
 
     StatistiquesParTheme getStatistiquesParTheme(String userId, String theme);
 
     StatistiquesParTheme createOrUpdateStatistiquesParTheme(
-            String userId, String theme, int partiesJouees, int partiesGagnees, int questionsBonnes, int questionsTotales);
+            String userId, String theme, int nbVictoire, int mmr, double scoreMoyen, double TempRepMoyen, int nbPartie);
 }

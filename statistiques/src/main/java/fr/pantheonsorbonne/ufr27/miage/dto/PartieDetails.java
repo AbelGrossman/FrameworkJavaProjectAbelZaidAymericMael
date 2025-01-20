@@ -3,11 +3,11 @@ package fr.pantheonsorbonne.ufr27.miage.dto;
 public class PartieDetails {
 
     private String userId;
-    private int partieId;
     private int rangPartie;
-    private int nbBonnesReponses;
+    private int scorePartie;
     private int nbQuestions;
     private String theme;
+    private double tempsRepMoyen;
 
     // Getters et Setters
     public String getUserId() {
@@ -18,14 +18,6 @@ public class PartieDetails {
         this.userId = userId;
     }
 
-    public int getPartieId() {
-        return partieId;
-    }
-
-    public void setPartieId(int partieId) {
-        this.partieId = partieId;
-    }
-
     public int getRangPartie() {
         return rangPartie;
     }
@@ -34,12 +26,12 @@ public class PartieDetails {
         this.rangPartie = rangPartie;
     }
 
-    public int getNbBonnesReponses() {
-        return nbBonnesReponses;
+    public int getScorePartie() {
+        return scorePartie;
     }
 
-    public void setNbBonnesReponses(int nbBonnesReponses) {
-        this.nbBonnesReponses = nbBonnesReponses;
+    public void setScorePartie(int scorePartie) {
+        this.scorePartie = scorePartie;
     }
 
     public int getNbQuestions() {
@@ -56,5 +48,13 @@ public class PartieDetails {
 
     public void setTheme(String theme) {
         this.theme = theme;
+    }
+
+    public double getTempsRepMoyen() {
+        return tempsRepMoyen;
+    }
+
+    public void setTempsRepMoyen(double tempsRepMoyen) {
+        this.tempsRepMoyen = tempsRepMoyen;
     }
 }

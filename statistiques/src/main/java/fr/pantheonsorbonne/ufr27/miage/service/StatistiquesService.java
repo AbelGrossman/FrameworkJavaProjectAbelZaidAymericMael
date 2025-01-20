@@ -5,7 +5,7 @@ import fr.pantheonsorbonne.ufr27.miage.model.StatistiquesParTheme;
 
 public interface StatistiquesService {
 
-    void updateStatistiques(String userId, int rangPartie, int nbBonnesReponses, int nbQuestions, String theme);
+    void updateStatistiques(String userId, int rangPartie, int scorePartie, int nbQuestions, String theme, double tempsRepMoyen);
 
     StatistiquesJoueur getStatistiquesJoueur(String userId);
 

@@ -29,28 +29,24 @@ public class StatistiquesDAOImpl implements StatistiquesDAO {
     @Override
     @Transactional
     public StatistiquesJoueur createOrUpdateStatistiquesJoueur(
-            String userId, int partiesJouees, int partiesGagnees, int questionsBonnes, int questionsTotales) {
+            String userId, int nbVictoire, int mmr, double scoreMoyen, double tempsRepMoyen, int nbPartie) {
         StatistiquesJoueur stats = getStatistiquesJoueur(userId);
 
         if (stats == null) {
             stats = new StatistiquesJoueur();
             stats.setUserId(userId);
-            stats.setPartiesJouees(partiesJouees);
-            stats.setPartiesGagnees(partiesGagnees);
-            stats.setQuestionsBonnes(questionsBonnes);
-            stats.setQuestionsTotales(questionsTotales);
-            stats.setPourcentageVictoire(
-                    (partiesJouees == 0) ? 0.0 : (double) partiesGagnees / partiesJouees * 100);
+            stats.setNbVictoires(nbVictoire);
+            stats.setMmr(mmr);
+            stats.setScoreMoyen(scoreMoyen);
+            stats.setTempsRepMoyen(tempsRepMoyen);
+            stats.setNbPartie(nbPartie);
             em.persist(stats);
         } else {
-            stats.setPartiesJouees(stats.getPartiesJouees() + partiesJouees);
-            stats.setPartiesGagnees(stats.getPartiesGagnees() + partiesGagnees);
-            stats.setQuestionsBonnes(stats.getQuestionsBonnes() + questionsBonnes);
-            stats.setQuestionsTotales(stats.getQuestionsTotales() + questionsTotales);
-            stats.setPourcentageVictoire(
-                    (partiesJouees == 0) ? 0.0 : (double) partiesGagnees / partiesJouees * 100);
-            //stats.setPourcentageVictoire(
-            //        (stats.getPartiesJouees() == 0) ? 0.0 : (double) stats.getPartiesGagnees() / stats.getPartiesJouees() * 100);
+            stats.setNbVictoires(nbVictoire);
+            stats.setMmr(mmr);
+            stats.setScoreMoyen(scoreMoyen);
+            stats.setTempsRepMoyen(tempsRepMoyen);
+            stats.setNbPartie(nbPartie);
             em.merge(stats);
         }
 
@@ -74,23 +70,25 @@ public class StatistiquesDAOImpl implements StatistiquesDAO {
     @Override
     @Transactional
     public StatistiquesParTheme createOrUpdateStatistiquesParTheme(
-            String userId, String theme, int partiesJouees, int partiesGagnees, int questionsBonnes, int questionsTotales) {
+            String userId, String theme, int nbVictoire, int mmr, double scoreMoyen, double tempsRepMoyen, int nbPartie) {
         StatistiquesParTheme stats = getStatistiquesParTheme(userId, theme);
 
         if (stats == null) {
             stats = new StatistiquesParTheme();
             stats.setUserId(userId);
             stats.setTheme(theme);
-            stats.setPartiesJouees(partiesJouees);
-            stats.setPartiesGagnees(partiesGagnees);
-            stats.setQuestionsBonnes(questionsBonnes);
-            stats.setQuestionsTotales(questionsTotales);
+            stats.setNbVictoires(nbVictoire);
+            stats.setMmr(mmr);
+            stats.setScoreMoyen(scoreMoyen);
+            stats.setTempsRepMoyen(tempsRepMoyen);
+            stats.setNbPartie(nbPartie);
             em.persist(stats);
         } else {
-            stats.setPartiesJouees(stats.getPartiesJouees() + partiesJouees);
-            stats.setPartiesGagnees(stats.getPartiesGagnees() + partiesGagnees);
-            stats.setQuestionsBonnes(stats.getQuestionsBonnes() + questionsBonnes);
-            stats.setQuestionsTotales(stats.getQuestionsTotales() + questionsTotales);
+            stats.setNbVictoires(nbVictoire);
+            stats.setMmr(mmr);
+            stats.setScoreMoyen(scoreMoyen);
+            stats.setTempsRepMoyen(tempsRepMoyen);
+            stats.setNbPartie(nbPartie);
             em.merge(stats);
         }
 
