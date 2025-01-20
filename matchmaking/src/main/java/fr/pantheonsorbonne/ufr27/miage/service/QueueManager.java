@@ -1,27 +1,40 @@
 package fr.pantheonsorbonne.ufr27.miage.service;
 
+import fr.pantheonsorbonne.ufr27.miage.dto.UserWithMmr;
 import fr.pantheonsorbonne.ufr27.miage.model.Queue;
-import fr.pantheonsorbonne.ufr27.miage.dto.User;
-import fr.pantheonsorbonne.ufr27.miage.dto.Team;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.random.RandomGenerator;
 
+
+import jakarta.ws.rs.*;
+
+
+@Path("/queue")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 @ApplicationScoped
 public class QueueManager {
 
     @Inject
     TeamEmitter teamEmitter;
 
+
+    @Inject
     private final Map<String, Queue> queues = new HashMap<>();
+
+    @Inject
     private final Map<String, Long> lastTeamFormedTime = new HashMap<>();
+
+    @Inject
     private final int mmrAdjustmentInterval= 10_000; // 10 seconds
 
 
@@ -38,27 +51,63 @@ public class QueueManager {
         return queue;
     }
 
-    public void addPlayerToQueue(User user) {
-        Queue queue = getOrCreateQueue(user.getTheme());
-        synchronized (queue) {
-            queue.addPlayer(user);
-        }
+    @POST
+    @Path("/{theme}createQueue")
+    public Response createQueue(@PathParam("theme") String theme) {
+        Queue queue = queues.get(theme);
+        if (queue != null) {
+            return Response.status(Response.Status.CONFLICT).build();
+        } 
+        queue = new Queue(theme);
+        queues.put(theme, queue);
+        return Response.ok(queue).build();
     }
 
-    public void formTeams(String theme) {
+    @GET
+    @Path("/{theme}getQueue")
+    public Response getQueue(@PathParam("theme") String theme) {
+        Queue queue = queues.get(theme);
+        if (queue == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        return Response.ok(queue).build();
+    }
+
+    @POST
+    @Path("/{theme}/{userId}/{userMmr}/{userTheme}/addPlayerToQueueMapping")
+    public Response addPlayerToQueueMapping(@PathParam("userId") Long userId, @PathParam("userMmr") int userMmr, @PathParam("userTheme") String userTheme) {
+        UserWithMmr user = new UserWithMmr(userId, userTheme, userMmr);
+        Queue queue = getOrCreateQueue(user.theme());
+        // synchronized (queue) {
+            queue.addPlayer(user);
+        // }
+        return Response.ok().build();
+    }
+
+    public Response addPlayerToQueue(UserWithMmr user) {
+        Queue queue = getOrCreateQueue(user.theme());
+        // synchronized (queue) {
+            queue.addPlayer(user);
+        // }
+        return Response.ok().build();
+    } 
+
+    @POST
+    @Path("/{theme}/formTeams")
+    public Response formTeams(@PathParam("theme") String theme) {
         Queue queue = getOrCreateQueue(theme);
     
-        synchronized (queue) {
-            List<User> players = queue.getPlayers();
-            players.sort(Comparator.comparingInt(User::getMmr));
+        // synchronized (queue) {
+            List<UserWithMmr> players = queue.getPlayers();
+            players.sort(Comparator.comparingInt(UserWithMmr::mmr));
 
-            List<List<User>> teams = new ArrayList<>();
-            List<User> currentTeam = new ArrayList<>();
+            List<List<UserWithMmr>> teams = new ArrayList<>();
+            List<UserWithMmr> currentTeam = new ArrayList<>();
             boolean teamFormed = false;
     
-            for (User player : players) {
+            for (UserWithMmr player : players) {
                 if (currentTeam.size()<6 && (currentTeam.isEmpty() || 
-                    player.getMmr() - currentTeam.get(0).getMmr() <= queue.getAllowedMmrDifference())) {
+                    player.mmr() - currentTeam.get(0).mmr() <= queue.getAllowedMmrDifference())) {
                     currentTeam.add(player);
                 } else {
                     if (currentTeam.size() == 6) {
@@ -79,8 +128,7 @@ public class QueueManager {
             }
     
             // Emit all formed teams to creation-partie
-            for (List<User> userList : teams) {
-                Team team = new Team(userList, 123123);
+            for (List<UserWithMmr> team : teams) {
                 teamEmitter.sendTeamToCreationPartie(team);
             }
     
@@ -89,10 +137,11 @@ public class QueueManager {
                 queue.setAllowedMmrDifference(20);
                 lastTeamFormedTime.put(theme, System.currentTimeMillis());
             }
-        }
+        // }
+        return Response.ok(teams).build();
     }
 
-    public void adjustMmrDifferencePeriodically() {
+    public Response adjustMmrDifferencePeriodically() {
         long currentTime = System.currentTimeMillis();
 
         for (Map.Entry<String, Queue> entry : queues.entrySet()) {
@@ -109,6 +158,7 @@ public class QueueManager {
                 }
             }
         }
+        return Response.ok().build();
     }
 
     public List<String> getThemes() {
