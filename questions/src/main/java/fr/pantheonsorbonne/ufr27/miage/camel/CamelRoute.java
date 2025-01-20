@@ -28,14 +28,14 @@ public class CamelRoute extends RouteBuilder {
 
                     exchange.getMessage().setBody(questions);
                 })
-                .log("Returning questions: ${body}")
-                .to("direct:sendQuestions");
+                .log("Returning questions: ${body}") ;
+             /*   .to("direct:sendQuestions");
 
         // Route to send questions to the destination - it's abstract and need to wait Creation de Partie to be implemented
         from("direct:sendQuestions")
                 .routeId("sendTriviaQuestionsRoute")
                 .log("Sending questions: ${body}")
-                .to("mock:result");
+                .to("mock:result"); */
 
     }
 
