@@ -1,73 +1,75 @@
-// package fr.pantheonsorbonne.ufr27.miage;
+package fr.pantheonsorbonne.ufr27.miage;
 
-// import org.junit.jupiter.api.BeforeEach;
-// import org.junit.jupiter.api.Test;
-// import org.mockito.Mockito;
-
-// import com.google.inject.Inject;
-
-// import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 
-// import fr.pantheonsorbonne.ufr27.miage.service.QueueManager;
-// import fr.pantheonsorbonne.ufr27.miage.service.TeamEmitter;
-// import fr.pantheonsorbonne.ufr27.miage.model.User;
-// import fr.pantheonsorbonne.ufr27.miage.model.Queue;
+import static org.junit.jupiter.api.Assertions.*;
 
-// class QueueManagerTest {
 
-//     private QueueManager queueManager;
-//     private TeamEmitter mockTeamEmitter;
+import fr.pantheonsorbonne.ufr27.miage.service.QueueManager;
+import fr.pantheonsorbonne.ufr27.miage.service.TeamEmitter;
+import fr.pantheonsorbonne.ufr27.miage.dto.UserWithMmr;
+import fr.pantheonsorbonne.ufr27.miage.model.Queue;
 
-//     @BeforeEach
-//     void setUp() {
-//         mockTeamEmitter = Mockito.mock(TeamEmitter.class);
-//         queueManager = new QueueManager(mockTeamEmitter);
-//     }
+class QueueManagerTest {
 
-//     @Test
-//     void testAddPlayerToQueue() {
-//         User user = new User("1", "Geography", 1000);
-//         queueManager.addPlayerToQueue(user);
+    private QueueManager queueManager;
+    private TeamEmitter mockTeamEmitter;
 
-//         Queue queue = queueManager.getOrCreateQueue("Geography");
-//         assertEquals(1, queue.getPlayers().size());
-//         assertEquals(user, queue.getPlayers().get(0));
-//     }
+    @BeforeEach
+    void setUp() {
+        mockTeamEmitter = Mockito.mock(TeamEmitter.class);
+        queueManager = new QueueManager(mockTeamEmitter);
+    }
 
-//     @Test
-//     void testFormTeams() {
-//         // Add players to the queue
-//         for (int i = 1; i <= 6; i++) {
-//             User user = new User(String.valueOf(i), "Geography", 1000 + i);
-//             queueManager.addPlayerToQueue(user);
-//         }
+    @Test
+    void testAddPlayerToQueue() {
+        UserWithMmr user = new UserWithMmr(1L, "Geography", 1000);
+        queueManager.addPlayerToQueue(user);
 
-//         // Form teams
-//         queueManager.formTeams("Geography");
-//         Queue queue = queueManager.getOrCreateQueue("Geography");
-//         assertTrue(queue.getPlayers().isEmpty(), "Queue should be empty after forming a team.");
-//     }
+        Queue queue = queueManager.getOrCreateQueue("Geography");
+        assertEquals(1, queue.getPlayers().size());
+        assertEquals(user, queue.getPlayers().get(0));
+    }
 
-//     @Test
-//     void testAllowedMmrIncreasesPeriodically() throws InterruptedException {
-//     QueueManager realQueueManager = new QueueManager(mockTeamEmitter);
+    @Test
+    void testFormTeams() {
+        // Add players to the queue
+        for (Long i = 1L; i <= 6; i++) {
+            int mmr = (int) (1000 + i);
+            UserWithMmr user = new UserWithMmr(i, "Geography", mmr);
+            queueManager.addPlayerToQueue(user);
+        }
 
-//     // Add a queue with only 3 players (not enough for a team)
-//     for (int i = 1; i <= 3; i++) {
-//         realQueueManager.addPlayerToQueue(new User(String.valueOf(i), "Geography", 1000 + i));
-//     }
+        // Form teams
+        queueManager.formTeams("Geography");
+        Queue queue = queueManager.getOrCreateQueue("Geography");
+        assertTrue(queue.getPlayers().isEmpty(), "Queue should be empty after forming a team.");
+    }
 
-//     Queue queue = realQueueManager.getOrCreateQueue("Geography");
-//     int initialAllowedMmr = queue.getAllowedMmrDifference();
+    @Test
+    void testAllowedMmrIncreasesPeriodically() throws InterruptedException {
+    QueueManager realQueueManager = new QueueManager(mockTeamEmitter);
 
-//     // Simulate periodic MMR adjustment
-//     realQueueManager.adjustMmrDifferencePeriodically(); // Simulate the first execution
-//     Thread.sleep(11000); // Simulate time passing for a second adjustment
-//     realQueueManager.adjustMmrDifferencePeriodically(); // Simulate the second execution
+    // Add a queue with only 3 players (not enough for a team)
+    for (Long i = 1L; i <= 3; i++) {
+        int mmr = (int) (1000 + i);
+        UserWithMmr user = new UserWithMmr(i, "Geography", mmr);
+        realQueueManager.addPlayerToQueue(user);
+    }
 
-//     assertTrue(queue.getAllowedMmrDifference() > initialAllowedMmr, 
-//                "Allowed MMR difference should increase after periodic adjustment.");
-// }
+    Queue queue = realQueueManager.getOrCreateQueue("Geography");
+    int initialAllowedMmr = queue.getAllowedMmrDifference();
 
-// }
+    // Simulate periodic MMR adjustment
+    realQueueManager.adjustMmrDifferencePeriodically(); // Simulate the first execution
+    Thread.sleep(11000); // Simulate time passing for a second adjustment
+    realQueueManager.adjustMmrDifferencePeriodically(); // Simulate the second execution
+
+    assertTrue(queue.getAllowedMmrDifference() > initialAllowedMmr, 
+               "Allowed MMR difference should increase after periodic adjustment.");
+}
+
+}
