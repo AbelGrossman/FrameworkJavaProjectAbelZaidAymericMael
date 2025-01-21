@@ -28,14 +28,11 @@ public class QueueManager {
     TeamEmitter teamEmitter;
 
 
-    @Inject
     private final Map<String, Queue> queues = new HashMap<>();
 
-    @Inject
     private final Map<String, Long> lastTeamFormedTime = new HashMap<>();
 
-    @Inject
-    private final int mmrAdjustmentInterval= 10_000; // 10 seconds
+    private final int mmrAdjustmentInterval= 10_000;
 
 
     public QueueManager(TeamEmitter teamEmitter) {
@@ -77,7 +74,7 @@ public class QueueManager {
     @Path("/{theme}/{userId}/{userMmr}/{userTheme}/addPlayerToQueueMapping")
     public Response addPlayerToQueueMapping(@PathParam("userId") Long userId, @PathParam("userMmr") int userMmr, @PathParam("userTheme") String userTheme) {
         UserWithMmr user = new UserWithMmr(userId, userTheme, userMmr);
-        Queue queue = getOrCreateQueue(user.theme());
+        Queue queue = getOrCreateQueue(user.getTheme());
         // synchronized (queue) {
             queue.addPlayer(user);
         // }
@@ -85,7 +82,7 @@ public class QueueManager {
     }
 
     public Response addPlayerToQueue(UserWithMmr user) {
-        Queue queue = getOrCreateQueue(user.theme());
+        Queue queue = getOrCreateQueue(user.getTheme());
         // synchronized (queue) {
             queue.addPlayer(user);
         // }
@@ -99,7 +96,7 @@ public class QueueManager {
     
         // synchronized (queue) {
             List<UserWithMmr> players = queue.getPlayers();
-            players.sort(Comparator.comparingInt(UserWithMmr::mmr));
+            players.sort(Comparator.comparingInt(UserWithMmr::getMmr));
 
             List<List<UserWithMmr>> teams = new ArrayList<>();
             List<UserWithMmr> currentTeam = new ArrayList<>();
@@ -107,7 +104,7 @@ public class QueueManager {
     
             for (UserWithMmr player : players) {
                 if (currentTeam.size()<6 && (currentTeam.isEmpty() || 
-                    player.mmr() - currentTeam.get(0).mmr() <= queue.getAllowedMmrDifference())) {
+                    player.getMmr() - currentTeam.get(0).getMmr() <= queue.getAllowedMmrDifference())) {
                     currentTeam.add(player);
                 } else {
                     if (currentTeam.size() == 6) {
