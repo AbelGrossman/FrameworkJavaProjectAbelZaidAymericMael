@@ -18,6 +18,8 @@ public class CamelRoute extends RouteBuilder {
     @Override
     public void configure() throws Exception {
         /*
+        This is for local and test route
+
         from("direct:fetchQuestions")
                 .routeId("fetchTriviaQuestionsRoute")
                 .log("Fetching questions for category: ${header.category}, difficulty: ${header.difficulty}")
@@ -33,22 +35,29 @@ public class CamelRoute extends RouteBuilder {
          */
 
         from("sjms2:fetchQuestions")
+                .onException(Exception.class)
+                    .log("Error occurred: ${exception.message}")
+                    .handled(true)
+                    .to("sjms2:errorQueue")
+                    .end()
                 .log("Réponse de la requête : ${body}")
-                //.bean(questionServices, "askAPIQuestions")
-                .log("Fetching questions for category: ${header.theme}, difficulty: ${header.difficulty}")
+                .bean(questionServices, "askAPIQuestions")
+                .log("Fetching questions for category:ID=${header.id}, ${header.theme}, difficulty: ${header.difficulty}")
                 .process(exchange -> {
+                    String id = exchange.getMessage().getHeader("id", String.class);
                     String category = exchange.getMessage().getHeader("theme", String.class);
                     String difficulty = exchange.getMessage().getHeader("difficulty", String.class);
 
                     List<QuestionDTO> questions = questionServices.askAPIQuestions(category, difficulty);
 
                     exchange.getMessage().setBody(questions);
+
+                    exchange.getMessage().setHeader("id", id);
                 })
-                .log("Returning questions: ${body}")
+                .log("Returning questions for ID=${header.id}: ${body}")
                 .marshal().json()
                 .to("sjms2:fetchQuestionsResponses");
     }
-
 }
 
 
