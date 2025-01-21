@@ -2,7 +2,7 @@ package fr.pantheonsorbonne.ufr27.miage.resources;
 
 
 
-import fr.pantheonsorbonne.ufr27.miage.dto.MatchmakingRequest;
+import fr.pantheonsorbonne.ufr27.miage.dto.UserWithoutMmrRequest;
 import fr.pantheonsorbonne.ufr27.miage.service.UserEmitter;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -27,7 +27,7 @@ public class UserProcessor {
 
     @POST
     @Path("/processNewUser")
-    public Response processNewUser(MatchmakingRequest user) {
+    public Response processNewUser(UserWithoutMmrRequest user) {
         // Add the incoming player to the queue
         userEmitter.processRankedUser(user);
         return Response.ok().build();

@@ -2,7 +2,7 @@ package fr.pantheonsorbonne.ufr27.miage.service;
 
 import org.apache.camel.ProducerTemplate;
 
-import fr.pantheonsorbonne.ufr27.miage.dto.MatchmakingRequest;
+import fr.pantheonsorbonne.ufr27.miage.dto.UserWithoutMmrRequest;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -23,7 +23,7 @@ public class UserEmitter {
 
     @POST
     @Path("/processRankedUser")
-    public Response processRankedUser(MatchmakingRequest user){
+    public Response processRankedUser(UserWithoutMmrRequest user){
         producerTemplate.sendBody("direct:userMmrRequest", user);
         return Response.ok().build();
     }

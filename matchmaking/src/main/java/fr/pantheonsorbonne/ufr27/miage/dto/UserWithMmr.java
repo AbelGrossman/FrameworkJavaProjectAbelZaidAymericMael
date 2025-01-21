@@ -11,7 +11,7 @@ public class UserWithMmr {
     
     @Id
     @Column(name="id", nullable=false)
-    private Long id;
+    private Long playerId;
 
     @Column(name="theme", nullable=false)
     private String theme;
@@ -23,13 +23,13 @@ public class UserWithMmr {
     }
 
     public UserWithMmr(Long userId, String userTheme, int userMmr){
-        this.id = userId;
+        this.playerId = userId;
         this.theme = userTheme;
         this.mmr = userMmr;
     }
 
-    public Long getId(){
-        return id;
+    public Long getPlayerId(){
+        return playerId;
     }
 
     public String getTheme(){
