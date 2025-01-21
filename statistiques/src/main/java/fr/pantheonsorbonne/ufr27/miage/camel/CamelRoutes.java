@@ -85,7 +85,7 @@ public class CamelRoutes extends RouteBuilder {
                 })
                 .log("Statistiques par thème : ${body}")
                 .marshal().json()
-                .to("sjms2:M1.MatchmakingService"); // Vous pouvez définir une destination ou un traitement suivant.
+                .to("sjms2:M1.MatchmakingServiceMmr"); // Vous pouvez définir une destination ou un traitement suivant.
 
     }
 }
