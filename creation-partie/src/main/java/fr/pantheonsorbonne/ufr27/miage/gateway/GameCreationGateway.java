@@ -1,5 +1,6 @@
 package fr.pantheonsorbonne.ufr27.miage.gateway;
 
+import fr.pantheonsorbonne.ufr27.miage.dto.JoinGameRequest;
 import fr.pantheonsorbonne.ufr27.miage.dto.TeamResponseDto;
 import fr.pantheonsorbonne.ufr27.miage.exception.DuplicateRequestException;
 import fr.pantheonsorbonne.ufr27.miage.service.GameCreationService;
@@ -21,20 +22,13 @@ public class GameCreationGateway {
     private final ConcurrentHashMap<String, TeamResponseDto> teamResponses = new ConcurrentHashMap<>();
 
     public void handlePlayerRequest(String body, Exchange exchange) throws Exception {
-        Map<String, Object> request = mapper.readValue(body, Map.class);
-        Long playerId = Long.valueOf((Integer) request.get("playerId"));
-
+        JoinGameRequest request = mapper.readValue(body, JoinGameRequest.class);
         try {
-            gameService.validateNewRequest(playerId);
-            gameService.createNewRequest(playerId);
-            gameService.updateToMatchmaking(playerId);
+            gameService.validateNewRequest(request.playerId());
+            gameService.createNewRequest(request.playerId());
+            gameService.updateToMatchmaking(request.playerId());
 
-            Map<String, Object> matchmakingRequest = Map.of(
-                    "playerId", request.get("playerId"),
-                    "theme", request.get("theme")
-            );
-
-            exchange.getMessage().setBody(mapper.writeValueAsString(matchmakingRequest));
+            exchange.getMessage().setBody(request);
         } catch (DuplicateRequestException e) {
             exchange.getMessage().setBody(mapper.writeValueAsString(Map.of("error", e.getMessage())));
             exchange.getMessage().setHeader(Exchange.HTTP_RESPONSE_CODE, 409);
@@ -49,15 +43,6 @@ public class GameCreationGateway {
         exchange.getMessage().setHeader("category", team.theme());
         exchange.getMessage().setHeader("difficulty", team.difficulty());
         exchange.getMessage().setHeader("teamId", team.teamId());
-
-        // Create request for questions service
-        Map<String, Object> questionsRequest = Map.of(
-                "theme", team.theme(),
-                "difficulty", team.difficulty(),
-                "teamId", team.teamId()
-        );
-
-        exchange.getMessage().setBody(mapper.writeValueAsString(questionsRequest));
     }
 
     @SuppressWarnings("unchecked")

@@ -50,7 +50,6 @@ public class GameRequestResource {
                     mapper.writeValueAsString(joinRequest)
             );
 
-            System.out.println(joinRequest);
             return Response.ok(Map.of(
                     "message", "Join request accepted",
                     "playerId", joinRequest.playerId()

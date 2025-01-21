@@ -7,6 +7,7 @@
  import fr.pantheonsorbonne.ufr27.miage.resources.RankedUserProcessor;
  import fr.pantheonsorbonne.ufr27.miage.resources.UserProcessor;
  import jakarta.inject.Inject;
+ import org.apache.camel.model.dataformat.JsonLibrary;
 
  public class MatchmakingRoute extends RouteBuilder {
 
@@ -19,13 +20,13 @@
      @Override
      public void configure() {
          from("sjms2:M1.MatchmakingService")
-             .log("User received from Creation Service")
-             .unmarshal().json(UserWithoutMmrRequest.class)
-             .bean(userProcessor, "processNewUser");
+             .log("User received from Creation Service : ${body}")
+             .unmarshal().json(JsonLibrary.Jackson,UserWithoutMmrRequest.class)
+             .bean("UserProcessor", "processNewUser");
 
          from("direct:userMmrRequest").marshal().json().to("sjms2:M1.StatistiquesService");
 
-         from("sjms2:M1.MatchmakingService")
+         from("sjms2:M1.MatchmakingServiceMmr")
          .unmarshal().json(UserWithMmr.class)
          .bean("RankedUserProcessor", "processRankedUser");
 
