@@ -7,6 +7,6 @@ import java.util.List;
 public record TeamResponseDto(
         String teamId,
         String theme,
-        List<Theme> players,
+        List<UserDto> players,
         String difficulty
 ) {}

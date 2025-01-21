@@ -1,15 +1,12 @@
 package fr.pantheonsorbonne.ufr27.miage.camel;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.pantheonsorbonne.ufr27.miage.dto.TeamResponseDto;
 import fr.pantheonsorbonne.ufr27.miage.gateway.GameCreationGateway;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.dataformat.JsonLibrary;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import java.util.Map;
 
 @ApplicationScoped
 public class GameCreationRoutes extends RouteBuilder {
