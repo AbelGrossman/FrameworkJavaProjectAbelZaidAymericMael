@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Game</title>
+</head>
+<body>
+    <h1 id="game-title">Quiz Game</h1>
+    <div id="questions"></div>
+    <div id="score">Score: 0</div>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const playerId = urlParams.get('playerId');
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        // Display the player ID in the title
+        document.getElementById('game-title').innerText = `Quiz Game ${playerId}`;
+
+        function fetchCurrentQuestion() {
+            fetch(`/game/current-question?playerId=${playerId}`)
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Player is not allowed to access the questions');
+                    }
+                })
+                .then(question => {
+                    displayQuestion(question);
+                })
+                .catch(error => {
+                    alert(error.message);
+                });
+        }
+
+        function displayQuestion(question) {
+            const questionsDiv = document.getElementById('questions');
+            questionsDiv.innerHTML = ''; // Clear previous questions
+
+            const questionDiv = document.createElement('div');
+            questionDiv.innerHTML = `
+                <p>${question.question}</p>
+                <ul>
+                    ${question.incorrect_answers.map(answer => `<li>${answer}</li>`).join('')}
+                    <li>${question.correct_answer}</li>
+                </ul>
+                <input type="text" id="answer-${currentQuestionIndex}" placeholder="Enter your answer">
+                <button onclick="submitAnswer(${currentQuestionIndex})">Submit</button>
+            `;
+            questionsDiv.appendChild(questionDiv);
+        }
+
+        function submitAnswer(questionIndex) {
+            const answer = document.getElementById(`answer-${questionIndex}`).value;
+            fetch(`/game/answer`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ playerId, answer })
+            })
+            .then(response => response.text())
+            .then(message => {
+                const updatedScore = parseInt(message.split(': ')[1]);
+                updateScore(updatedScore);
+                fetch(`/game/next-question`, {
+                    method: 'POST'
+                })
+                .then(response => response.text())
+                .then(message => {
+                    alert(message);
+                    fetchCurrentQuestion();
+                });
+            });
+        }
+
+        function updateScore(newScore) {
+            score = newScore;
+            document.getElementById('score').innerText = `Score: ${score}`;
+        }
+
+        // Fetch current question when the page loads
+        fetchCurrentQuestion();
+    </script>
+</body>
+</html>
