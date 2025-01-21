@@ -2,7 +2,7 @@ package fr.pantheonsorbonne.ufr27.miage.dto;
 
 public class PartieDetails {
 
-    private String userId;
+    private Long playerId;
     private int rangPartie;
     private int scorePartie;
     private int nbQuestions;
@@ -10,12 +10,12 @@ public class PartieDetails {
     private double tempsRepMoyen;
 
     // Getters et Setters
-    public String getUserId() {
-        return userId;
+    public Long getPlayerId() {
+        return playerId;
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
+    public void setPlayerId(Long playerId) {
+        this.playerId = playerId;
     }
 
     public int getRangPartie() {

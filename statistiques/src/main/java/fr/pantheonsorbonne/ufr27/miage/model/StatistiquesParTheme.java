@@ -11,8 +11,8 @@ public class StatistiquesParTheme {
     @Column(name = "idStatistiquesTheme", nullable = false)
     private Integer id;
 
-    @Column(name = "userId", nullable = false, unique = true,length = 50)
-    private String userId;
+    @Column(name = "playerId", nullable = false, unique = true,length = 50)
+    private Long playerId;
 
     @Column(name = "theme", nullable = false, length = 45)
     private String theme;
@@ -32,12 +32,12 @@ public class StatistiquesParTheme {
     @Column(name = "tempsRepMoyen", nullable = false)
     private Double tempsRepMoyen;
 
-    public String getUserId() {
-        return userId;
+    public Long getPlayerId() {
+        return playerId;
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
+    public void setPlayerId(Long playerId) {
+        this.playerId = playerId;
     }
 
     public String getTheme() {

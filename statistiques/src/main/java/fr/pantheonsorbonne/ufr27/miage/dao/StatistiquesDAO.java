@@ -5,13 +5,13 @@ import fr.pantheonsorbonne.ufr27.miage.model.StatistiquesParTheme;
 
 public interface StatistiquesDAO {
 
-    StatistiquesJoueur getStatistiquesJoueur(String userId);
+    StatistiquesJoueur getStatistiquesJoueur(Long playerId);
 
     StatistiquesJoueur createOrUpdateStatistiquesJoueur(
-            String userId, int nbVictoire, int mmr, double scoreMoyen, double TempRepMoyen, int nbPartie);
+            Long playerId, int nbVictoire, int mmr, double scoreMoyen, double TempRepMoyen, int nbPartie);
 
-    StatistiquesParTheme getStatistiquesParTheme(String userId, String theme);
+    StatistiquesParTheme getStatistiquesParTheme(Long playerId, String theme);
 
     StatistiquesParTheme createOrUpdateStatistiquesParTheme(
-            String userId, String theme, int nbVictoire, int mmr, double scoreMoyen, double TempRepMoyen, int nbPartie);
+            Long playerId, String theme, int nbVictoire, int mmr, double scoreMoyen, double TempRepMoyen, int nbPartie);
 }

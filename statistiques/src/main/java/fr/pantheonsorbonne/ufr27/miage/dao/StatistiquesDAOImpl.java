@@ -15,11 +15,11 @@ public class StatistiquesDAOImpl implements StatistiquesDAO {
     EntityManager em;
 
     @Override
-    public StatistiquesJoueur getStatistiquesJoueur(String userId) {
+    public StatistiquesJoueur getStatistiquesJoueur(Long playerId) {
         try {
             return em.createQuery(
-                            "SELECT s FROM StatistiquesJoueur s WHERE s.userId = :userId", StatistiquesJoueur.class)
-                    .setParameter("userId", userId)
+                            "SELECT s FROM StatistiquesJoueur s WHERE s.playerId = :playerId", StatistiquesJoueur.class)
+                    .setParameter("playerId", playerId)
                     .getSingleResult();
         } catch (Exception e) {
             return null;
@@ -29,12 +29,12 @@ public class StatistiquesDAOImpl implements StatistiquesDAO {
     @Override
     @Transactional
     public StatistiquesJoueur createOrUpdateStatistiquesJoueur(
-            String userId, int nbVictoire, int mmr, double scoreMoyen, double tempsRepMoyen, int nbPartie) {
-        StatistiquesJoueur stats = getStatistiquesJoueur(userId);
+            Long playerId, int nbVictoire, int mmr, double scoreMoyen, double tempsRepMoyen, int nbPartie) {
+        StatistiquesJoueur stats = getStatistiquesJoueur(playerId);
 
         if (stats == null) {
             stats = new StatistiquesJoueur();
-            stats.setUserId(userId);
+            stats.setPlayerId(playerId);
             stats.setNbVictoires(nbVictoire);
             stats.setMmr(mmr);
             stats.setScoreMoyen(scoreMoyen);
@@ -54,12 +54,12 @@ public class StatistiquesDAOImpl implements StatistiquesDAO {
     }
 
     @Override
-    public StatistiquesParTheme getStatistiquesParTheme(String userId, String theme) {
+    public StatistiquesParTheme getStatistiquesParTheme(Long playerId, String theme) {
         try {
             return em.createQuery(
-                            "SELECT s FROM StatistiquesParTheme s WHERE s.userId = :userId AND s.theme = :theme",
+                            "SELECT s FROM StatistiquesParTheme s WHERE s.playerId = :playerId AND s.theme = :theme",
                             StatistiquesParTheme.class)
-                    .setParameter("userId", userId)
+                    .setParameter("playerId", playerId)
                     .setParameter("theme", theme)
                     .getSingleResult();
         } catch (Exception e) {
@@ -70,12 +70,12 @@ public class StatistiquesDAOImpl implements StatistiquesDAO {
     @Override
     @Transactional
     public StatistiquesParTheme createOrUpdateStatistiquesParTheme(
-            String userId, String theme, int nbVictoire, int mmr, double scoreMoyen, double tempsRepMoyen, int nbPartie) {
-        StatistiquesParTheme stats = getStatistiquesParTheme(userId, theme);
+            Long playerId, String theme, int nbVictoire, int mmr, double scoreMoyen, double tempsRepMoyen, int nbPartie) {
+        StatistiquesParTheme stats = getStatistiquesParTheme(playerId, theme);
 
         if (stats == null) {
             stats = new StatistiquesParTheme();
-            stats.setUserId(userId);
+            stats.setPlayerId(playerId);
             stats.setTheme(theme);
             stats.setNbVictoires(nbVictoire);
             stats.setMmr(mmr);
