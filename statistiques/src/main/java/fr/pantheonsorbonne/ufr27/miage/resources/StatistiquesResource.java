@@ -17,21 +17,21 @@ public class StatistiquesResource {
     StatistiquesDAO statistiquesDAO;
 
     @GET
-    @Path("/{userId}")
-    public StatistiquesJoueur getStatistiquesGlobales(@PathParam("userId") String userId) {
-        StatistiquesJoueur stats = statistiquesDAO.getStatistiquesJoueur(userId);
+    @Path("/{playerId}")
+    public StatistiquesJoueur getStatistiquesGlobales(@PathParam("playerId") Long playerId) {
+        StatistiquesJoueur stats = statistiquesDAO.getStatistiquesJoueur(playerId);
         if (stats == null) {
-            throw new NotFoundException("Aucune statistique globale trouvée pour l'utilisateur : " + userId);
+            throw new NotFoundException("Aucune statistique globale trouvée pour l'utilisateur : " + playerId);
         }
         return stats;
     }
 
     @GET
-    @Path("/{userId}/theme/{theme}")
-    public StatistiquesParTheme getStatistiquesParTheme(@PathParam("userId") String userId, @PathParam("theme") String theme) {
-        StatistiquesParTheme stats = statistiquesDAO.getStatistiquesParTheme(userId, theme);
+    @Path("/{playerId}/theme/{theme}")
+    public StatistiquesParTheme getStatistiquesParTheme(@PathParam("playerId") Long playerId, @PathParam("theme") String theme) {
+        StatistiquesParTheme stats = statistiquesDAO.getStatistiquesParTheme(playerId, theme);
         if (stats == null) {
-            throw new NotFoundException("Aucune statistique trouvée pour l'utilisateur " + userId + " et le thème " + theme);
+            throw new NotFoundException("Aucune statistique trouvée pour l'utilisateur " + playerId + " et le thème " + theme);
         }
         return stats;
     }

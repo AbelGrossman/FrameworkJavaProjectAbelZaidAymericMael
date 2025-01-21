@@ -1,53 +1,16 @@
 package fr.pantheonsorbonne.ufr27.miage.dto;
 
 public class StatistiquesRequest {
-    private String userId;
-    private int rangPartie;
-    private int scoreMoyen;
-    private int nbQuestions;
-    private double tempsRepMoyen;
-    private int rang;
+
+    private Long playerId;
     private String theme;
 
-    // Getters et setters
-    public String getUserId() {
-        return userId;
+    public Long getPlayerId() {
+        return playerId;
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public int getRangPartie() {
-        return rangPartie;
-    }
-
-    public void setRangPartie(int rangPartie) {
-        this.rangPartie = rangPartie;
-    }
-
-    public int getScoreMoyen() {
-        return scoreMoyen;
-    }
-
-    public void setScoreMoyen(int scoreMoyen) {
-        this.scoreMoyen = scoreMoyen;
-    }
-
-    public int getNbQuestions() {
-        return nbQuestions;
-    }
-
-    public void setNbQuestions(int nbQuestions) {
-        this.nbQuestions = nbQuestions;
-    }
-
-    public double gettempsRepMoyen() {
-        return tempsRepMoyen;
-    }
-
-    public void settempsRepMoyen(double tempsRepMoyen) {
-        this.tempsRepMoyen = tempsRepMoyen;
+    public void setPlayerId(Long playerId) {
+        this.playerId = playerId;
     }
 
     public String getTheme() {
@@ -56,5 +19,36 @@ public class StatistiquesRequest {
 
     public void setTheme(String theme) {
         this.theme = theme;
+    }
+
+    // Classe interne pour la réponse JSON
+    public static class StatistiquesResponse {
+        private Long playerId;
+        private String theme;
+        private Integer mmr;
+
+        public Long getPlayerId() {
+            return playerId;
+        }
+
+        public void setPlayerId(Long playerId) {
+            this.playerId = playerId;
+        }
+
+        public String getTheme() {
+            return theme;
+        }
+
+        public void setTheme(String theme) {
+            this.theme = theme;
+        }
+
+        public Integer getMmr() {
+            return mmr;
+        }
+
+        public void setMmr(Integer mmr) {
+            this.mmr = mmr;
+        }
     }
 }

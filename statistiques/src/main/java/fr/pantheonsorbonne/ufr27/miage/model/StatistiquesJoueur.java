@@ -11,8 +11,8 @@ public class StatistiquesJoueur {
     @Column(name = "idStatistiques", nullable = false)
     private Integer id;
 
-    @Column(name = "userId", nullable = false, unique = true, length = 50)
-    private String userId;
+    @Column(name = "playerId", nullable = false, unique = true, length = 50)
+    private Long playerId;
 
     @Column(name = "nbVictoires")
     private Integer nbVictoires;
@@ -34,9 +34,9 @@ public class StatistiquesJoueur {
 
     public void setId(Integer id) { this.id = id;}
 
-    public String getUserId() { return userId;}
+    public Long getPlayerId() { return playerId;}
 
-    public void setUserId(String userId) { this.userId = userId;
+    public void setPlayerId(Long playerId) { this.playerId = playerId;
     }
 
     public Integer getNbVictoires() {return nbVictoires;}

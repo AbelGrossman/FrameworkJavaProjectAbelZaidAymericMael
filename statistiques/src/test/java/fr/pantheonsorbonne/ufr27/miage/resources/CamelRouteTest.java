@@ -8,6 +8,7 @@ import fr.pantheonsorbonne.ufr27.miage.model.StatistiquesParTheme;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import org.apache.camel.Exchange;
 import org.apache.camel.ProducerTemplate;
 import org.junit.jupiter.api.Test;
 
@@ -30,7 +31,7 @@ class CamelRoutesTest {
     void testStatistiquesUpdate_ValidData() {
         // Arrange
         PartieDetails validPartieDetails = new PartieDetails();
-        validPartieDetails.setUserId("user1");
+        validPartieDetails.setPlayerId(1L);
         validPartieDetails.setRangPartie(1);
         validPartieDetails.setScorePartie(18);
         validPartieDetails.setNbQuestions(30);
@@ -41,8 +42,8 @@ class CamelRoutesTest {
         producerTemplate.sendBody("direct:statistiquesUpdate", validPartieDetails);
 
         // Assert
-        StatistiquesJoueur updatedStats = statistiquesDAO.getStatistiquesJoueur("user1");
-        StatistiquesParTheme updatedThemeStats = statistiquesDAO.getStatistiquesParTheme("user1", "science");
+        StatistiquesJoueur updatedStats = statistiquesDAO.getStatistiquesJoueur(1L);
+        StatistiquesParTheme updatedThemeStats = statistiquesDAO.getStatistiquesParTheme(1L, "science");
 
         assertNotNull(updatedStats, "StatistiquesJoueur devrait être créé ou mis à jour.");
         assertEquals(1, updatedStats.getNbPartie(), "Le nombre de parties devrait être 1.");
@@ -55,11 +56,66 @@ class CamelRoutesTest {
     }
 
     @Test
+    void testCreateStatistiqueUser() {
+
+        // Préparation des données à envoyer à la route Camel sous forme de JSON
+        String jsonRequest = "{ \"playerId\": 3, \"theme\": \"Math\" }";
+
+        // Envoi du message JSON à la route Camel
+        //ProducerTemplate producerTemplate = context.createProducerTemplate();
+        Exchange exchange = producerTemplate.request("sjms2:M1.StatistiquesService", ex -> {
+            ex.getIn().setBody(jsonRequest);
+        });
+
+        // Vérification que la réponse n'est pas null et contient les données attendues
+        StatistiquesParTheme statsParTheme = exchange.getIn().getBody(StatistiquesParTheme.class);
+
+        // Assert
+        StatistiquesJoueur newupdatedStats = statistiquesDAO.getStatistiquesJoueur(3L);
+        StatistiquesParTheme newstatsParTheme = statistiquesDAO.getStatistiquesParTheme(3L, "Math");
+
+        assertNotNull(newupdatedStats, "Les statistiques par user devraient être créées.");
+        assertNotNull(newstatsParTheme, "Les statistiques par thème devraient être créées.");
+        assertNotNull(newstatsParTheme.getMmr(), "Le MMR ne devrait pas être null.");
+
+
+//        // Arrange
+//        PartieDetails validPartieDetails = new PartieDetails();
+//        validPartieDetails.setPlayerId(1L);
+//        validPartieDetails.setTheme("science");
+//
+//        // Act
+//        // Envoi d'un message via Camel pour créer les statistiques pour l'utilisateur et le thème
+//        producerTemplate.sendBody("sjms2:M1.StatistiquesService", validPartieDetails);
+//
+//        // Assert
+//        StatistiquesJoueur createdStats = statistiquesDAO.getStatistiquesJoueur(validPartieDetails.getPlayerId());
+//        StatistiquesParTheme createdThemeStats = statistiquesDAO.getStatistiquesParTheme(validPartieDetails.getPlayerId(), validPartieDetails.getTheme());
+//
+//        // Vérification des statistiques globales pour le joueur
+//        assertNotNull(createdStats, "Les statistiques du joueur devraient être créées.");
+//        assertEquals(0, createdStats.getNbPartie(), "Le nombre de parties pour le joueur devrait être 0.");
+//        assertEquals(0, createdStats.getNbVictoires(), "Le nombre de victoires pour le joueur devrait être 0.");
+//        assertEquals(0.0, createdStats.getScoreMoyen(), "Le score moyen pour le joueur devrait être 0.0.");
+//        assertEquals(0.0, createdStats.getTempsRepMoyen(), "Le temps de réponse moyen pour le joueur devrait être 0.0.");
+//        assertEquals(0, createdStats.getMmr(), "Le MMR pour le joueur devrait être 0.");
+//
+//        // Vérification des statistiques par thème pour le joueur
+//        assertNotNull(createdThemeStats, "Les statistiques par thème pour le joueur devraient être créées.");
+//        assertEquals(validPartieDetails.getTheme(), createdThemeStats.getTheme(), "Le thème devrait être 'science'.");
+//        assertEquals(0, createdThemeStats.getNbPartie(), "Le nombre de parties pour ce thème devrait être 0.");
+//        assertEquals(0, createdThemeStats.getNbVictoires(), "Le nombre de victoires pour ce thème devrait être 0.");
+//        assertEquals(0.0, createdThemeStats.getScoreMoyen(), "Le score moyen pour ce thème devrait être 0.0.");
+//        assertEquals(0.0, createdThemeStats.getTempsRepMoyen(), "Le temps de réponse moyen pour ce thème devrait être 0.0.");
+    }
+
+
+    @Test
     @Transactional
     void testStatistiquesUpdate_MultipleUpdatesAndNewUser() {
         // Première partie pour user1
         PartieDetails user1FirstGame = new PartieDetails();
-        user1FirstGame.setUserId("user1");
+        user1FirstGame.setPlayerId(1L);
         user1FirstGame.setRangPartie(1);
         user1FirstGame.setScorePartie(18);
         user1FirstGame.setNbQuestions(30);
@@ -70,7 +126,7 @@ class CamelRoutesTest {
 
         // Deuxième partie pour user1
         PartieDetails user1SecondGame = new PartieDetails();
-        user1SecondGame.setUserId("user1");
+        user1SecondGame.setPlayerId(1L);
         user1SecondGame.setRangPartie(2);
         user1SecondGame.setScorePartie(24);
         user1SecondGame.setNbQuestions(30);
@@ -81,7 +137,7 @@ class CamelRoutesTest {
 
         // Partie pour user2
         PartieDetails user2FirstGame = new PartieDetails();
-        user2FirstGame.setUserId("user2");
+        user2FirstGame.setPlayerId(2L);
         user2FirstGame.setRangPartie(1);
         user2FirstGame.setScorePartie(21);
         user2FirstGame.setNbQuestions(30);
@@ -91,8 +147,8 @@ class CamelRoutesTest {
         producerTemplate.sendBody("direct:statistiquesUpdate", user2FirstGame);
 
         // Vérifications pour user1
-        StatistiquesJoueur updatedStatsUser1 = statistiquesDAO.getStatistiquesJoueur("user1");
-        StatistiquesParTheme updatedThemeStatsUser1 = statistiquesDAO.getStatistiquesParTheme("user1", "science");
+        StatistiquesJoueur updatedStatsUser1 = statistiquesDAO.getStatistiquesJoueur(2L);
+        StatistiquesParTheme updatedThemeStatsUser1 = statistiquesDAO.getStatistiquesParTheme(2L, "science");
 
         assertNotNull(updatedStatsUser1, "StatistiquesJoueur pour user1 devrait être mis à jour.");
         assertEquals(2, updatedStatsUser1.getNbPartie(), "Le nombre de parties pour user1 devrait être 2.");
@@ -104,8 +160,8 @@ class CamelRoutesTest {
         assertEquals(2, updatedThemeStatsUser1.getNbPartie(), "Le nombre de parties pour ce thème pour user1 devrait être 2.");
 
         // Vérifications pour user2
-        StatistiquesJoueur updatedStatsUser2 = statistiquesDAO.getStatistiquesJoueur("user2");
-        StatistiquesParTheme updatedThemeStatsUser2 = statistiquesDAO.getStatistiquesParTheme("user2", "histoire");
+        StatistiquesJoueur updatedStatsUser2 = statistiquesDAO.getStatistiquesJoueur(2L);
+        StatistiquesParTheme updatedThemeStatsUser2 = statistiquesDAO.getStatistiquesParTheme(2L, "histoire");
 
         assertNotNull(updatedStatsUser2, "StatistiquesJoueur pour user2 devrait être créé.");
         assertEquals(1, updatedStatsUser2.getNbPartie(), "Le nombre de parties pour user2 devrait être 1.");
@@ -122,7 +178,7 @@ class CamelRoutesTest {
     void testStatistiquesUpdate_MissingUserId() {
         // Arrange
         PartieDetails invalidPartieDetails = new PartieDetails();
-        invalidPartieDetails.setUserId(null); // Manquant pour déclencher l'exception
+        invalidPartieDetails.setPlayerId(null); // Manquant pour déclencher l'exception
         invalidPartieDetails.setTheme("science"); // Les autres champs sont valides
 
         // Act & Assert
@@ -137,7 +193,7 @@ class CamelRoutesTest {
     void testStatistiquesUpdate_ExceptionHandling() {
         // Arrange
         PartieDetails partieDetails = new PartieDetails();
-        partieDetails.setUserId("user123");
+        partieDetails.setPlayerId(123L);
         partieDetails.setRangPartie(2);
         partieDetails.setScorePartie(70);
         partieDetails.setNbQuestions(10);
