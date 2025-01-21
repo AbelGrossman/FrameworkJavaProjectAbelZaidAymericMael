@@ -2,9 +2,11 @@ package fr.pantheonsorbonne.ufr27.miage.dto;
 
 public class PlayerResultsRequest {
     private String playerId;
-    private String gameId;
     private int score;
-    private long averageResponseTime;
+    private String averageResponseTime;
+    private String category;
+    private int totalQuestions;
+    private int rank;
 
     // Getters and Setters
 
@@ -16,14 +18,6 @@ public class PlayerResultsRequest {
         this.playerId = playerId;
     }
 
-    public String getGameId() {
-        return gameId;
-    }
-
-    public void setGameId(String gameId) {
-        this.gameId = gameId;
-    }
-
     public int getScore() {
         return score;
     }
@@ -32,11 +26,35 @@ public class PlayerResultsRequest {
         this.score = score;
     }
 
-    public long getAverageResponseTime() {
+    public String getAverageResponseTime() {
         return averageResponseTime;
     }
 
-    public void setAverageResponseTime(long averageResponseTime) {
+    public void setAverageResponseTime(String averageResponseTime) {
         this.averageResponseTime = averageResponseTime;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public int getTotalQuestions() {
+        return totalQuestions;
+    }
+
+    public void setTotalQuestions(int totalQuestions) {
+        this.totalQuestions = totalQuestions;
+    }
+
+    public int getRank() {
+        return rank;
+    }
+
+    public void setRank(int rank) {
+        this.rank = rank;
     }
 }

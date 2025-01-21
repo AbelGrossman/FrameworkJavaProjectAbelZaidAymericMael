@@ -4,85 +4,238 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz Game</title>
+    <style>
+        .question-container {
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .answer-button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            cursor: pointer;
+        }
+        .answer-button:hover:not(:disabled) {
+            background-color: #e9ecef;
+        }
+        .answer-button:disabled {
+            cursor: not-allowed;
+        }
+        .correct-answer {
+            background-color: #28a745 !important;
+            color: white !important;
+        }
+        .incorrect-answer {
+            background-color: #dc3545 !important;
+            color: white !important;
+        }
+        #timer {
+            font-size: 1.5em;
+            margin: 10px;
+            text-align: center;
+        }
+        .timer-question {
+            color: #dc3545;
+        }
+        .timer-answer {
+            color: #28a745;
+        }
+        .answer-reveal {
+            background-color: #28a745;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+            font-size: 1.2em;
+        }
+        .timer-warning {
+            animation: blink 1s linear infinite;
+        }
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+    </style>
 </head>
 <body>
-    <h1 id="game-title">Quiz Game</h1>
-    <div id="questions"></div>
-    <div id="score">Score: 0</div>
-    <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const playerId = urlParams.get('playerId');
-        let currentQuestionIndex = 0;
-        let score = 0;
+<h1 id="game-title">Quiz Game</h1>
+<div id="timer"></div>
+<div id="score">Score: 0</div>
+<div id="questions"></div>
 
-        // Display the player ID in the title
-        document.getElementById('game-title').innerText = `Quiz Game ${playerId}`;
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const playerId = urlParams.get('playerId');
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let questions = [];
+    let answerSubmitted = false;
+    let gameStateInterval;
+    let lastSubmittedAnswer = '';
 
-        function fetchCurrentQuestion() {
-            fetch(`/game/current-question?playerId=${playerId}`)
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    } else {
-                        throw new Error('Player is not allowed to access the questions');
+    function updateGameState() {
+        fetch(`/game/state?playerId=${playerId}`)
+            .then(response => response.json())
+            .then(gameState => {
+                const remainingTime = Math.ceil(gameState.remainingTime / 1000);
+
+                // Update timer display
+                const timerElement = document.getElementById('timer');
+                if (gameState.isShowingAnswer) {
+                    timerElement.innerText = `Showing answer: ${remainingTime}s`;
+                    timerElement.className = 'timer-answer';
+                } else {
+                    timerElement.innerText = `Time remaining: ${remainingTime}s`;
+                    timerElement.className = 'timer-question';
+                    if (remainingTime <= 5) {
+                        timerElement.classList.add('timer-warning');
                     }
-                })
-                .then(question => {
-                    displayQuestion(question);
-                })
-                .catch(error => {
-                    alert(error.message);
-                });
-        }
+                }
 
-        function displayQuestion(question) {
-            const questionsDiv = document.getElementById('questions');
-            questionsDiv.innerHTML = ''; // Clear previous questions
+                // Handle answer display phase
+                if (gameState.isShowingAnswer) {
+                    showCorrectAnswer(gameState.correctAnswer);
+                }
+
+                // Handle question transitions
+                if (gameState.currentQuestionIndex !== currentQuestionIndex) {
+                    currentQuestionIndex = gameState.currentQuestionIndex;
+                    lastSubmittedAnswer = '';
+                    displayCurrentQuestion();
+                }
+
+                if (gameState.hasAnswered && !answerSubmitted) {
+                    disableAnswerButtons();
+                }
+            })
+            .catch(error => console.error('Error updating game state:', error));
+    }
+
+    function startGameStatePolling() {
+        gameStateInterval = setInterval(updateGameState, 1000);
+    }
+
+    function fetchQuestions() {
+        fetch(`/game/questions?playerId=${playerId}`)
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to fetch questions');
+                return response.json();
+            })
+            .then(data => {
+                questions = data;
+                displayCurrentQuestion();
+                startGameStatePolling();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert(error.message);
+            });
+    }
+
+    function showCorrectAnswer(correctAnswer) {
+        const buttons = document.querySelectorAll('.answer-button');
+        buttons.forEach(button => {
+            button.disabled = true;
+            if (button.innerText === correctAnswer) {
+                button.classList.add('correct-answer');
+            } else if (button.innerText === lastSubmittedAnswer && lastSubmittedAnswer !== correctAnswer) {
+                button.classList.add('incorrect-answer');
+            }
+        });
+
+        // Add explanation of correct answer
+        const answerRevealDiv = document.getElementById('answer-reveal');
+        if (!answerRevealDiv) {
+            const revealDiv = document.createElement('div');
+            revealDiv.id = 'answer-reveal';
+            revealDiv.className = 'answer-reveal';
+            revealDiv.innerText = `The correct answer is: ${correctAnswer}`;
+            document.getElementById('questions').insertBefore(revealDiv, document.getElementById('questions').firstChild);
+        }
+    }
+
+    function displayCurrentQuestion() {
+        const questionsDiv = document.getElementById('questions');
+        questionsDiv.innerHTML = '';
+        answerSubmitted = false;
+
+        if (currentQuestionIndex < questions.length) {
+            const question = questions[currentQuestionIndex];
+            const allAnswers = [...question.incorrect_answers, question.correct_answer];
+            const shuffledAnswers = allAnswers.sort(() => Math.random() - 0.5);
 
             const questionDiv = document.createElement('div');
+            questionDiv.className = 'question-container';
             questionDiv.innerHTML = `
+                <h3>Question ${currentQuestionIndex + 1} of ${questions.length}</h3>
                 <p>${question.question}</p>
-                <ul>
-                    ${question.incorrect_answers.map(answer => `<li>${answer}</li>`).join('')}
-                    <li>${question.correct_answer}</li>
-                </ul>
-                <input type="text" id="answer-${currentQuestionIndex}" placeholder="Enter your answer">
-                <button onclick="submitAnswer(${currentQuestionIndex})">Submit</button>
+                <div>
+                    ${shuffledAnswers.map(answer => `
+                        <button class="answer-button" onclick="submitAnswer('${answer.replace(/'/g, "\\'")}')"
+                                ${answerSubmitted ? 'disabled' : ''}>
+                            ${answer}
+                        </button>
+                    `).join('')}
+                </div>
             `;
             questionsDiv.appendChild(questionDiv);
+        } else {
+            questionsDiv.innerHTML = '<div class="question-container"><h3>Game completed!</h3><p>Final score: ' + score + '</p></div>';
+            clearInterval(gameStateInterval);
         }
+    }
 
-        function submitAnswer(questionIndex) {
-            const answer = document.getElementById(`answer-${questionIndex}`).value;
-            fetch(`/game/answer`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ playerId, answer })
+    function disableAnswerButtons() {
+        document.querySelectorAll('.answer-button').forEach(button => {
+            button.disabled = true;
+        });
+    }
+
+    function submitAnswer(answer) {
+        if (answerSubmitted) return;
+        answerSubmitted = true;
+        lastSubmittedAnswer = answer;
+
+        const startTime = Date.now();
+        fetch('/game/answer', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                playerId: playerId,
+                answer: answer,
+                startTime: startTime
             })
-            .then(response => response.text())
-            .then(message => {
-                const updatedScore = parseInt(message.split(': ')[1]);
-                updateScore(updatedScore);
-                fetch(`/game/next-question`, {
-                    method: 'POST'
-                })
-                .then(response => response.text())
-                .then(message => {
-                    alert(message);
-                    fetchCurrentQuestion();
-                });
+        })
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to submit answer');
+                return response.json();
+            })
+            .then(data => {
+                updateScore(data.score);
+                disableAnswerButtons();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error submitting answer. Please try again.');
+                answerSubmitted = false;
+                lastSubmittedAnswer = '';
             });
-        }
+    }
 
-        function updateScore(newScore) {
-            score = newScore;
-            document.getElementById('score').innerText = `Score: ${score}`;
-        }
+    function updateScore(newScore) {
+        score = newScore;
+        document.getElementById('score').innerText = `Score: ${score}`;
+    }
 
-        // Fetch current question when the page loads
-        fetchCurrentQuestion();
-    </script>
+    // Start the game by fetching questions
+    fetchQuestions();
+</script>
 </body>
 </html>
