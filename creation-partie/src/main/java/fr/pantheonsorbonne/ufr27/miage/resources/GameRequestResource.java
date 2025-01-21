@@ -32,7 +32,7 @@ public class GameRequestResource {
     private final ObjectMapper mapper = new ObjectMapper();
 
     @POST
-    @Path("/game/join")
+    @Path("/join")
     public Response joinGame(@HeaderParam("Authorization") String token, JoinGameRequest joinRequest) {
         try {
             // Validate token and get playerId from it
@@ -50,6 +50,7 @@ public class GameRequestResource {
                     mapper.writeValueAsString(joinRequest)
             );
 
+            System.out.println(joinRequest);
             return Response.ok(Map.of(
                     "message", "Join request accepted",
                     "playerId", joinRequest.playerId()
@@ -67,7 +68,7 @@ public class GameRequestResource {
     public Response leaveGame(@PathParam("playerId") Long playerId) {
         try {
             producerTemplate.sendBody(
-                    "sjms2:M1.CreationPartieService",
+                    "sjms2:M1.MatchmakingService",
                     mapper.writeValueAsString(playerId)
             );
             gameService.cancelRequest(playerId);

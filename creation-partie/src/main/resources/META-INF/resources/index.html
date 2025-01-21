@@ -103,30 +103,16 @@
     <div class="form-group">
         <label for="theme">Theme:</label>
         <select id="theme" required>
-            <option value="General Knowledge">General Knowledge</option>
-            <option value="Books">Books</option>
-            <option value="Film">Film</option>
-            <option value="Music">Music</option>
-            <option value="Musicals & Theatres">Musicals & Theatres</option>
-            <option value="Television">Television</option>
-            <option value="Video Games">Video Games</option>
-            <option value="Board Games">Board Games</option>
-            <option value="Science & Nature">Science & Nature</option>
-            <option value="Computers">Computers</option>
-            <option value="Mathematics">Mathematics</option>
-            <option value="Mythology">Mythology</option>
-            <option value="Sports">Sports</option>
-            <option value="Geography">Geography</option>
-            <option value="History">History</option>
-            <option value="Politics">Politics</option>
-            <option value="Art">Art</option>
-            <option value="Celebrities">Celebrities</option>
-            <option value="Animals">Animals</option>
-            <option value="Vehicles">Vehicles</option>
-            <option value="Comics">Comics</option>
-            <option value="Gadgets">Gadgets</option>
-            <option value="Japanese Anime & Manga">Japanese Anime & Manga</option>
-            <option value="Cartoon & Animations">Cartoon & Animations</option>
+            <option value="music">Music</option>
+            <option value="sport_and_leisure">Sport and Leisure</option>
+            <option value="film_and_tv">Film and TV</option>
+            <option value="arts_and_literature">Arts and Literature</option>
+            <option value="history">History</option>
+            <option value="society_and_culture">Society and Culture</option>
+            <option value="science">Science</option>
+            <option value="geography">Geography</option>
+            <option value="food_and_drink">Food and Drink</option>
+            <option value="general_knowledge">General Knowledge</option>
         </select>
     </div>
     <button onclick="joinGame()">Join Game</button>
@@ -245,7 +231,7 @@
         const theme = document.getElementById('theme').value;
 
         try {
-            const response = await fetch('/game/game/join', {
+            const response = await fetch('/game/join', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
