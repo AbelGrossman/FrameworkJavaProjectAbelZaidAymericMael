@@ -149,17 +149,27 @@
         const gameButton = document.getElementById('gameButton');
         const leaveButton = document.getElementById('leaveButton');
         const logoutButton = document.getElementById('logoutButton');
+        const loginButton = document.querySelector('button[onclick="showContainer(\'login\')"]');
+        const registerButton = document.querySelector('button[onclick="showContainer(\'register\')"]');
 
         if (currentUser) {
+            // Show game-related buttons
             gameButton.style.display = 'inline';
             leaveButton.style.display = 'inline';
             logoutButton.style.display = 'inline';
+            // Hide auth buttons
+            loginButton.style.display = 'none';
+            registerButton.style.display = 'none';
             showContainer('game');
             startStatusCheck();
         } else {
+            // Hide game-related buttons
             gameButton.style.display = 'none';
             leaveButton.style.display = 'none';
             logoutButton.style.display = 'none';
+            // Show auth buttons
+            loginButton.style.display = 'inline';
+            registerButton.style.display = 'inline';
             showContainer('login');
             stopStatusCheck();
         }
