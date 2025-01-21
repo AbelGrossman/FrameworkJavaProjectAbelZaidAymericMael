@@ -113,42 +113,59 @@ class CamelRoutesTest {
     @Test
     @Transactional
     void testStatistiquesUpdate_MultipleUpdatesAndNewUser() {
+        String jsonP1U1 = "{\"playerId\": 1, \"scorePartie\": \"18\", \"tempsRepMoyen\": 15.5, \"theme\": \"science\", \"nbQuestions\": \"30\", \"rangPartie\": \"1\"}";
+        String jsonP2U1 = "{\"playerId\": 1, \"scorePartie\": \"24\", \"tempsRepMoyen\": 12.0, \"theme\": \"science\", \"nbQuestions\": \"30\", \"rangPartie\": \"2\"}";
+        String jsonP1U2 = "{\"playerId\": 2, \"scorePartie\": \"21\", \"tempsRepMoyen\": 14.0, \"theme\": \"histoire\", \"nbQuestions\": \"30\", \"rangPartie\": \"1\"}";
+
         // Première partie pour user1
-        PartieDetails user1FirstGame = new PartieDetails();
-        user1FirstGame.setPlayerId(1L);
-        user1FirstGame.setRangPartie(1);
-        user1FirstGame.setScorePartie(18);
-        user1FirstGame.setNbQuestions(30);
-        user1FirstGame.setTheme("science");
-        user1FirstGame.setTempsRepMoyen(15.5);
+//        PartieDetails user1FirstGame = new PartieDetails();
+//        user1FirstGame.setPlayerId(1L);
+//        user1FirstGame.setRangPartie(1);
+//        user1FirstGame.setScorePartie(18);
+//        user1FirstGame.setNbQuestions(30);
+//        user1FirstGame.setTheme("science");
+//        user1FirstGame.setTempsRepMoyen(15.5);
 
-        producerTemplate.sendBody("direct:statistiquesUpdate", user1FirstGame);
+        //producerTemplate.sendBody("direct:statistiquesUpdate", user1FirstGame);
+        // Envoyer jsonP1U1
+        Exchange exchangeP1U1 = producerTemplate.request("direct:statistiquesUpdate", ex -> {
+            ex.getIn().setBody(jsonP1U1);
+        });
+        System.out.println("Response for P1U1: " + exchangeP1U1.getMessage().getBody());
+        Exchange exchangeP2U1 = producerTemplate.request("direct:statistiquesUpdate", ex -> {
+            ex.getIn().setBody(jsonP2U1);
+        });
+        System.out.println("Response for P2U1: " + exchangeP2U1.getMessage().getBody());
+        Exchange exchangeP1U2 = producerTemplate.request("direct:statistiquesUpdate", ex -> {
+            ex.getIn().setBody(jsonP1U2);
+        });
+        System.out.println("Response for P1U1: " + exchangeP1U2.getMessage().getBody());
 
-        // Deuxième partie pour user1
-        PartieDetails user1SecondGame = new PartieDetails();
-        user1SecondGame.setPlayerId(1L);
-        user1SecondGame.setRangPartie(2);
-        user1SecondGame.setScorePartie(24);
-        user1SecondGame.setNbQuestions(30);
-        user1SecondGame.setTheme("science");
-        user1SecondGame.setTempsRepMoyen(12.0);
-
-        producerTemplate.sendBody("direct:statistiquesUpdate", user1SecondGame);
-
-        // Partie pour user2
-        PartieDetails user2FirstGame = new PartieDetails();
-        user2FirstGame.setPlayerId(2L);
-        user2FirstGame.setRangPartie(1);
-        user2FirstGame.setScorePartie(21);
-        user2FirstGame.setNbQuestions(30);
-        user2FirstGame.setTheme("histoire");
-        user2FirstGame.setTempsRepMoyen(14.0);
-
-        producerTemplate.sendBody("direct:statistiquesUpdate", user2FirstGame);
+//        // Deuxième partie pour user1
+//        PartieDetails user1SecondGame = new PartieDetails();
+//        user1SecondGame.setPlayerId(1L);
+//        user1SecondGame.setRangPartie(2);
+//        user1SecondGame.setScorePartie(24);
+//        user1SecondGame.setNbQuestions(30);
+//        user1SecondGame.setTheme("science");
+//        user1SecondGame.setTempsRepMoyen(12.0);
+//
+//        producerTemplate.sendBody("direct:statistiquesUpdate", user1SecondGame);
+//
+//        // Partie pour user2
+//        PartieDetails user2FirstGame = new PartieDetails();
+//        user2FirstGame.setPlayerId(2L);
+//        user2FirstGame.setRangPartie(1);
+//        user2FirstGame.setScorePartie(21);
+//        user2FirstGame.setNbQuestions(30);
+//        user2FirstGame.setTheme("histoire");
+//        user2FirstGame.setTempsRepMoyen(14.0);
+//
+//        producerTemplate.sendBody("direct:statistiquesUpdate", user2FirstGame);
 
         // Vérifications pour user1
-        StatistiquesJoueur updatedStatsUser1 = statistiquesDAO.getStatistiquesJoueur(2L);
-        StatistiquesParTheme updatedThemeStatsUser1 = statistiquesDAO.getStatistiquesParTheme(2L, "science");
+        StatistiquesJoueur updatedStatsUser1 = statistiquesDAO.getStatistiquesJoueur(1L);
+        StatistiquesParTheme updatedThemeStatsUser1 = statistiquesDAO.getStatistiquesParTheme(1L, "science");
 
         assertNotNull(updatedStatsUser1, "StatistiquesJoueur pour user1 devrait être mis à jour.");
         assertEquals(2, updatedStatsUser1.getNbPartie(), "Le nombre de parties pour user1 devrait être 2.");

@@ -36,7 +36,7 @@ public class CamelRoutes extends RouteBuilder {
 
         // Route de réception
         from("direct:statistiquesUpdate")
-                //.unmarshal().json(PartieDetails.class)
+                .unmarshal().json(PartieDetails.class)
                 .process(exchange -> {
                     PartieDetails partieDetails = exchange.getIn().getBody(PartieDetails.class);
 
