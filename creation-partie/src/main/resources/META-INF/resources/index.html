@@ -2,169 +2,341 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>sample-project - 1.0.0-SNAPSHOT</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Authentication</title>
     <style>
-        h1, h2, h3, h4, h5, h6 {
-            margin-bottom: 0.5rem;
-            font-weight: 400;
-            line-height: 1.5;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-        }
-
-        h2 {
-            font-size: 2rem
-        }
-
-        h3 {
-            font-size: 1.75rem
-
-        }
-
-        h4 {
-            font-size: 1.5rem
-        }
-
-        h5 {
-            font-size: 1.25rem
-        }
-
-        h6 {
-            font-size: 1rem
-        }
-
-        .lead {
-            font-weight: 300;
-            font-size: 2rem;
-        }
-
-        .banner {
-            font-size: 2.7rem;
-            margin: 0;
-            padding: 2rem 1rem;
-            background-color: #0d1c2c;
-            color: white;
-        }
-
         body {
-            margin: 0;
-            font-family: -apple-system, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
         }
-
-        code {
-            font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-            font-size: 87.5%;
-            color: #e83e8c;
-            word-break: break-word;
-        }
-
-        .left-column {
-            padding: .75rem;
-            max-width: 75%;
-            min-width: 55%;
-        }
-
-        .right-column {
-            padding: .75rem;
-            max-width: 25%;
-        }
-
         .container {
-            display: flex;
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        input, select {
             width: 100%;
+            padding: 8px;
+            margin-top: 5px;
         }
-
-        li {
-            margin: 0.75rem;
+        button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
         }
-
-        .right-section {
-            margin-left: 1rem;
-            padding-left: 0.5rem;
+        button:hover {
+            background-color: #0056b3;
         }
-
-        .right-section h3 {
-            padding-top: 0;
-            font-weight: 200;
+        .nav-buttons {
+            margin-bottom: 20px;
         }
-
-        .right-section ul {
-            border-left: 0.3rem solid #71aeef;
-            list-style-type: none;
-            padding-left: 0;
+        .alert {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
         }
-
-        .provided-code {
-            border-left: 0.3rem solid #71aeef;
-            padding-left: 10px;
+        .alert-error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
         }
-
-        .provided-code h3 {
-            font-weight: 200;
+        .alert-success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        #statusContainer {
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
+<h1>Game Authentication</h1>
 
-<div class="banner lead">
-    Your new Cloud-Native application is ready!
+<div class="nav-buttons">
+    <button onclick="showContainer('login')">Login</button>
+    <button onclick="showContainer('register')">Register</button>
+    <button onclick="showContainer('game')" id="gameButton" style="display: none;">Join Game</button>
+    <button onclick="leaveGame()" id="leaveButton" style="display: none;">Leave Game</button>
+    <button onclick="logout()" id="logoutButton" style="display: none;">Logout</button>
 </div>
 
-<div class="container">
-    <div class="left-column">
-        <p class="lead"> Congratulations, you have created a new Quarkus cloud application.</p>
-
-        <h2>What is this page?</h2>
-
-        <p>This page is served by Quarkus. The source is in
-            <code>src/main/resources/META-INF/resources/index.html</code>.</p>
-
-        <h2>What are your next steps?</h2>
-
-        <p>If not already done, run the application in <em>dev mode</em> using: <code>./mvnw compile quarkus:dev</code>.
-        </p>
-        <ul>
-            <li>Your static assets are located in <code>src/main/resources/META-INF/resources</code>.</li>
-            <li>Configure your application in <code>src/main/resources/application.properties</code>.</li>
-            <li>Quarkus now ships with a <a href="/q/dev/">Dev UI</a> (available in dev mode only)</li>
-            <li>Play with the provided code located in <code>src/main/java</code>:</li>
-        </ul>
-                <div class="provided-code">
-            <h3>RESTEasy JAX-RS</h3>
-            <p>Easily start your RESTful Web Services</p>
-            <p><code>@Path: <a href="/hello" class="path-link" target="_blank">/hello</a></code></p>
-            <p><a href="https://quarkus.io/guides/getting-started#the-jax-rs-resources" class="guide-link" target="_blank">Related guide section...</a></p>
-        </div>
-
+<div id="loginContainer" class="container">
+    <h2>Login</h2>
+    <div class="form-group">
+        <label for="loginUsername">Username:</label>
+        <input type="text" id="loginUsername" required>
     </div>
-    <div class="right-column">
-        <div class="right-section">
-            <h3>Application</h3>
-            <ul>
-                <li>GroupId: <code>fr.pantheonsorbonne.ufr27.miage</code></li>
-                <li>ArtifactId: <code>sample-project</code></li>
-                <li>Version: <code>1.0.0-SNAPSHOT</code></li>
-                <li>Quarkus Version: <code>2.4.0.Final</code></li>
-            </ul>
-        </div>
-        <div class="right-section">
-            <h3>Do you like Quarkus?</h3>
-            <ul>
-                <li>Go give it a star on <a href="https://github.com/quarkusio/quarkus">GitHub</a>.</li>
-            </ul>
-        </div>
-        <div class="right-section">
-            <h3>More reading</h3>
-            <ul>
-                <li><a href="https://quarkus.io/guides/maven-tooling.html" target="_blank">Setup your IDE</a></li>
-                <li><a href="https://quarkus.io/guides/getting-started.html" target="_blank">Getting started</a></li>
-                <li><a href="https://quarkus.io/guides/" target="_blank">All guides</a></li>
-                <li><a href="https://quarkus.io" target="_blank">Quarkus Web Site</a></li>
-            </ul>
-        </div>
+    <div class="form-group">
+        <label for="loginPassword">Password:</label>
+        <input type="password" id="loginPassword" required>
     </div>
+    <button onclick="login()">Login</button>
 </div>
+
+<div id="registerContainer" class="container">
+    <h2>Register</h2>
+    <div class="form-group">
+        <label for="registerUsername">Username:</label>
+        <input type="text" id="registerUsername" required>
+    </div>
+    <div class="form-group">
+        <label for="registerPassword">Password:</label>
+        <input type="password" id="registerPassword" required>
+    </div>
+    <button onclick="register()">Register</button>
+</div>
+
+<div id="gameContainer" class="container">
+    <h2>Join Game</h2>
+    <div class="form-group">
+        <label for="theme">Theme:</label>
+        <select id="theme" required>
+            <option value="music">Music</option>
+            <option value="sport_and_leisure">Sport and Leisure</option>
+            <option value="film_and_tv">Film and TV</option>
+            <option value="arts_and_literature">Arts and Literature</option>
+            <option value="history">History</option>
+            <option value="society_and_culture">Society and Culture</option>
+            <option value="science">Science</option>
+            <option value="geography">Geography</option>
+            <option value="food_and_drink">Food and Drink</option>
+            <option value="general_knowledge">General Knowledge</option>
+        </select>
+    </div>
+    <button onclick="joinGame()">Join Game</button>
+</div>
+
+<div id="statusContainer"></div>
+<div id="messageContainer"></div>
+
+<script>
+    let currentUser = null;
+    let statusCheckInterval = null;
+
+    function showContainer(containerId) {
+        const containers = ['loginContainer', 'registerContainer', 'gameContainer'];
+        containers.forEach(id => {
+            document.getElementById(id).style.display = 'none';
+        });
+        document.getElementById(containerId + 'Container').style.display = 'block';
+    }
+
+    function showMessage(message, isError = false) {
+        const messageContainer = document.getElementById('messageContainer');
+        messageContainer.innerHTML = `
+                <div class="alert ${isError ? 'alert-error' : 'alert-success'}">
+                    ${message}
+                </div>
+            `;
+        setTimeout(() => {
+            messageContainer.innerHTML = '';
+        }, 5000);
+    }
+
+    function updateUI() {
+        const gameButton = document.getElementById('gameButton');
+        const leaveButton = document.getElementById('leaveButton');
+        const logoutButton = document.getElementById('logoutButton');
+        const loginButton = document.querySelector('button[onclick="showContainer(\'login\')"]');
+        const registerButton = document.querySelector('button[onclick="showContainer(\'register\')"]');
+
+        if (currentUser) {
+            // Show game-related buttons
+            gameButton.style.display = 'inline';
+            leaveButton.style.display = 'inline';
+            logoutButton.style.display = 'inline';
+            // Hide auth buttons
+            loginButton.style.display = 'none';
+            registerButton.style.display = 'none';
+            showContainer('game');
+            startStatusCheck();
+        } else {
+            // Hide game-related buttons
+            gameButton.style.display = 'none';
+            leaveButton.style.display = 'none';
+            logoutButton.style.display = 'none';
+            // Show auth buttons
+            loginButton.style.display = 'inline';
+            registerButton.style.display = 'inline';
+            showContainer('login');
+            stopStatusCheck();
+        }
+    }
+
+    async function register() {
+        const username = document.getElementById('registerUsername').value;
+        const password = document.getElementById('registerPassword').value;
+
+        try {
+            const response = await fetch('/game/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showMessage('Registration successful! Please login.');
+                showContainer('login');
+            } else {
+                showMessage(data.error, true);
+            }
+        } catch (error) {
+            showMessage('Error during registration', true);
+        }
+    }
+
+    async function login() {
+        const username = document.getElementById('loginUsername').value;
+        const password = document.getElementById('loginPassword').value;
+
+        try {
+            const response = await fetch('/game/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                currentUser = {
+                    id: data.playerId,
+                    username: data.username,
+                    token: data.token
+                };
+                showMessage('Login successful!');
+                updateUI();
+            } else {
+                showMessage(data.error, true);
+            }
+        } catch (error) {
+            showMessage('Error during login', true);
+        }
+    }
+
+    async function joinGame() {
+        if (!currentUser) {
+            showMessage('Please login first', true);
+            return;
+        }
+
+        const theme = document.getElementById('theme').value;
+
+        try {
+            const response = await fetch('/game/join', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${currentUser.token}`
+                },
+                body: JSON.stringify({
+                    playerId: currentUser.id,
+                    theme: theme
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showMessage('Successfully joined the game!');
+            } else {
+                showMessage(data.error, true);
+            }
+        } catch (error) {
+            showMessage('Error joining game', true);
+        }
+    }
+
+    async function leaveGame() {
+        if (!currentUser) {
+            showMessage('Please login first', true);
+            return;
+        }
+
+        try {
+            const response = await fetch(`/game/leave/${currentUser.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${currentUser.token}`
+                }
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showMessage('Successfully left the game!');
+            } else {
+                showMessage(data.error, true);
+            }
+        } catch (error) {
+            showMessage('Error leaving game', true);
+        }
+    }
+
+    async function checkStatus() {
+        if (!currentUser) return;
+
+        try {
+            const response = await fetch(`/game/status/${currentUser.id}`, {
+                headers: {
+                    'Authorization': `Bearer ${currentUser.token}`
+                }
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                document.getElementById('statusContainer').innerHTML = `
+                        <div class="alert alert-success">
+                            Status: ${data.status}
+                        </div>
+                    `;
+            }
+        } catch (error) {
+            console.error('Error checking status:', error);
+        }
+    }
+
+    function startStatusCheck() {
+        stopStatusCheck();
+        checkStatus();
+        statusCheckInterval = setInterval(checkStatus, 5000);
+    }
+
+    function stopStatusCheck() {
+        if (statusCheckInterval) {
+            clearInterval(statusCheckInterval);
+            statusCheckInterval = null;
+        }
+        document.getElementById('statusContainer').innerHTML = '';
+    }
+
+    function logout() {
+        currentUser = null;
+        updateUI();
+        showMessage('Logged out successfully!');
+    }
+
+    // Show login container by default
+    showContainer('login');
+</script>
 </body>
 </html>

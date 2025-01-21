@@ -1,15 +1,38 @@
-package fr.pantheonsorbonne.ufr27.miage.camel;
+ package fr.pantheonsorbonne.ufr27.miage.camel;
 
-import org.apache.camel.builder.RouteBuilder;
+ import org.apache.camel.builder.RouteBuilder;
 
-public class MatchmakingRoute extends RouteBuilder {
-    @Override
-    public void configure() {
-        from("direct:receiveQueue")
-            .log("Queue received: ${body}")
-            .process(exchange -> {
-                // Logic to process queue
-            })
-            .end();
-    }
-}
+ import fr.pantheonsorbonne.ufr27.miage.dto.UserWithoutMmrRequest;
+ import fr.pantheonsorbonne.ufr27.miage.dto.UserWithMmr;
+ import fr.pantheonsorbonne.ufr27.miage.resources.RankedUserProcessor;
+ import fr.pantheonsorbonne.ufr27.miage.resources.UserProcessor;
+ import jakarta.inject.Inject;
+ import org.apache.camel.model.dataformat.JsonLibrary;
+
+ public class MatchmakingRoute extends RouteBuilder {
+
+     @Inject
+     UserProcessor userProcessor;
+
+     @Inject
+     RankedUserProcessor rankedUserProcessor;
+
+     @Override
+     public void configure() {
+         from("sjms2:M1.MatchmakingService")
+             .log("User received from Creation Service : ${body}")
+             .unmarshal().json(JsonLibrary.Jackson,UserWithoutMmrRequest.class)
+             .bean("UserProcessor", "processNewUser");
+
+         from("direct:userMmrRequest").marshal().json().to("sjms2:M1.StatistiquesService");
+
+         from("sjms2:M1.MatchmakingServiceMmr")
+         .unmarshal().json(UserWithMmr.class)
+         .bean("RankedUserProcessor", "processRankedUser");
+
+         from("direct:newTeam").marshal().json().to("sjms2:M1.CreationPartieService");
+
+     }
+
+
+ }

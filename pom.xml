@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>fr.pantheonsorbonne.ufr27.miage</groupId>
   <artifactId>project-m1</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>project-m1</name>
   <modules>
@@ -13,7 +13,6 @@
     <module>deroule-jeu</module>
     <module>statistiques</module>
     <module>matchmaking</module>
-    <module>commons</module>
   </modules>
   <dependencyManagement>
     <dependencies>

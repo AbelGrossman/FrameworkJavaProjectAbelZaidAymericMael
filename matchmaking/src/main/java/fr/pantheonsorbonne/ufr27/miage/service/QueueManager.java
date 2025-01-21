@@ -1,63 +1,164 @@
 package fr.pantheonsorbonne.ufr27.miage.service;
 
+import fr.pantheonsorbonne.ufr27.miage.dto.UserWithMmr;
 import fr.pantheonsorbonne.ufr27.miage.model.Queue;
-import fr.pantheonsorbonne.ufr27.miage.dto.User;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
+import jakarta.ws.rs.*;
+
+
+@Path("/queue")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 @ApplicationScoped
 public class QueueManager {
-    private final Map<String, List<Queue>> queues = new HashMap<>();
-    private final int queueSizeLimit = 50;
 
-    public synchronized Queue getOrCreateQueue(String theme) {
-        queues.putIfAbsent(theme, new ArrayList<>());
-        List<Queue> themeQueues = queues.get(theme);
+    @Inject
+    TeamEmitter teamEmitter;
 
-        // Get the first non-full queue or create a new one
-        for (Queue queue : themeQueues) {
-            if (!queue.isFull()) {
-                return queue;
-            }
+
+    private final Map<String, Queue> queues = new HashMap<>();
+
+    private final Map<String, Long> lastTeamFormedTime = new HashMap<>();
+
+    private final int mmrAdjustmentInterval= 10_000;
+
+
+    public QueueManager(TeamEmitter teamEmitter) {
+        this.teamEmitter = teamEmitter;
+    }
+    
+    public Queue getOrCreateQueue(String theme) {
+        Queue queue = queues.get(theme);
+        if (queue == null) {
+            queue = new Queue(theme);
+            queues.put(theme, queue);
         }
-
-        // Create a new queue if all are full
-        Queue newQueue = new Queue(theme);
-        themeQueues.add(newQueue);
-        return newQueue;
+        return queue;
     }
 
-    public synchronized void addPlayerToQueue(User user) {
+    @POST
+    @Path("/{theme}createQueue")
+    public Response createQueue(@PathParam("theme") String theme) {
+        Queue queue = queues.get(theme);
+        if (queue != null) {
+            return Response.status(Response.Status.CONFLICT).build();
+        } 
+        queue = new Queue(theme);
+        queues.put(theme, queue);
+        return Response.ok(queue).build();
+    }
+
+    @GET
+    @Path("/{theme}getQueue")
+    public Response getQueue(@PathParam("theme") String theme) {
+        Queue queue = queues.get(theme);
+        if (queue == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        return Response.ok(queue).build();
+    }
+
+    @POST
+    @Path("/{theme}/{userId}/{userMmr}/{userTheme}/addPlayerToQueueMapping")
+    public Response addPlayerToQueueMapping(@PathParam("userId") Long userId, @PathParam("userMmr") int userMmr, @PathParam("userTheme") String userTheme) {
+        UserWithMmr user = new UserWithMmr(userId, userTheme, userMmr);
         Queue queue = getOrCreateQueue(user.getTheme());
-        queue.addPlayer(user);
-        sortQueue(queue);
+        // synchronized (queue) {
+            queue.addPlayer(user);
+        // }
+        return Response.ok().build();
     }
 
-    private void sortQueue(Queue queue) {
-        queue.getPlayers().sort(Comparator.comparingInt(User::getMmr));
-    }
+    public Response addPlayerToQueue(UserWithMmr user) {
+        Queue queue = getOrCreateQueue(user.getTheme());
+        // synchronized (queue) {
+            queue.addPlayer(user);
+        // }
+        return Response.ok().build();
+    } 
 
-    public synchronized List<User> findTeam(String theme, int allowedMmrDifference) {
-        List<Queue> themeQueues = queues.getOrDefault(theme, new ArrayList<>());
-        for (Queue queue : themeQueues) {
-            List<User> players = queue.getPlayers();
-            List<User> team = new ArrayList<>();
+    @POST
+    @Path("/{theme}/formTeams")
+    public Response formTeams(@PathParam("theme") String theme) {
+        Queue queue = getOrCreateQueue(theme);
+    
+        // synchronized (queue) {
+            List<UserWithMmr> players = queue.getPlayers();
+            players.sort(Comparator.comparingInt(UserWithMmr::getMmr));
 
-            for (User player : players) {
-                if (team.isEmpty() || Math.abs(team.get(0).getMmr() - player.getMmr()) <= allowedMmrDifference) {
-                    team.add(player);
-                    if (team.size() == 6) {
-                        queue.getPlayers().removeAll(team);
-                        return team;
+            List<List<UserWithMmr>> teams = new ArrayList<>();
+            List<UserWithMmr> currentTeam = new ArrayList<>();
+            boolean teamFormed = false;
+    
+            for (UserWithMmr player : players) {
+                if (currentTeam.size()<6 && (currentTeam.isEmpty() || 
+                    player.getMmr() - currentTeam.get(0).getMmr() <= queue.getAllowedMmrDifference())) {
+                    currentTeam.add(player);
+                } else {
+                    if (currentTeam.size() == 6) {
+                        teams.add(new ArrayList<>(currentTeam));
+                        players.removeAll(currentTeam);
+                        teamFormed = true;
                     }
+                    currentTeam.clear();
+                    currentTeam.add(player);
+                }
+            }
+    
+            // Final check for the last team
+            if (currentTeam.size() == 6) {
+                teams.add(new ArrayList<>(currentTeam));
+                players.removeAll(currentTeam);
+                teamFormed = true;
+            }
+    
+            // Emit all formed teams to creation-partie
+            for (List<UserWithMmr> team : teams) {
+                teamEmitter.sendTeamToCreationPartie(team);
+            }
+    
+            if (teamFormed) {
+                // Reset allowed MMR difference and update last team formation time
+                queue.setAllowedMmrDifference(20);
+                lastTeamFormedTime.put(theme, System.currentTimeMillis());
+            }
+        // }
+        return Response.ok(teams).build();
+    }
+
+    public Response adjustMmrDifferencePeriodically() {
+        long currentTime = System.currentTimeMillis();
+
+        for (Map.Entry<String, Queue> entry : queues.entrySet()) {
+            String theme = entry.getKey();
+            Queue queue = entry.getValue();
+
+            synchronized (queue) {
+                long lastFormedTime = lastTeamFormedTime.getOrDefault(theme, 0L);
+
+                // If no teams were formed in the last interval, increase allowed MMR difference
+                if (currentTime - lastFormedTime >= mmrAdjustmentInterval) {
+                    queue.setAllowedMmrDifference(queue.getAllowedMmrDifference() + 20);
+                    lastTeamFormedTime.put(theme, currentTime);
                 }
             }
         }
-        return new ArrayList<>();
+        return Response.ok().build();
+    }
+
+    public List<String> getThemes() {
+        return new ArrayList<>(queues.keySet());
     }
 }
