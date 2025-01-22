@@ -3,6 +3,7 @@ package fr.pantheonsorbonne.ufr27.miage.service;
 
 import fr.pantheonsorbonne.ufr27.miage.camel.gateway.TheTriviaGateway;
 import fr.pantheonsorbonne.ufr27.miage.dto.QuestionDTO;
+import fr.pantheonsorbonne.ufr27.miage.exception.ServiceException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -26,18 +27,19 @@ public class QuestionServicesImpl implements QuestionServices {
 
     private List<QuestionDTO> fetchQuestions(String category, String difficulty) {
         try {
-            return theTriviaGateway.fetchQuestions(category, difficulty);
+            int limit = 20;
+            return theTriviaGateway.fetchQuestions(limit, category, difficulty);
         } catch (Exception e) {
-            throw new RuntimeException("Erreur lors de la récupération des questions : " + e.getMessage(), e);
+            throw new ServiceException("Erreur lors de la récupération des questions : " + e.getMessage(), e);
         }
     }
 
     private void validateParameters(String category, String difficulty) {
         if (category == null || category.isEmpty()) {
-            throw new IllegalArgumentException("La catégorie ne peut pas être nulle ou vide.");
+            throw new ServiceException("La catégorie ne peut pas être nulle ou vide.");
         }
         if (difficulty == null || difficulty.isEmpty()) {
-            throw new IllegalArgumentException("La difficulté ne peut pas être nulle ou vide.");
+            throw new ServiceException("La difficulté ne peut pas être nulle ou vide.");
         }
     }
 

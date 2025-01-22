@@ -6,7 +6,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.QueryParam;
 
 @Path("/")
-@RegisterRestClient(baseUri = "https://the-trivia-api.com/v2/questions?")
+@RegisterRestClient(baseUri = "https://the-trivia-api.com/v2/questions")
 public interface TheTriviaRestClient {
 
     @GET
