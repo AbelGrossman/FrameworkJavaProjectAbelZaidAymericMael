@@ -2,6 +2,7 @@ package fr.pantheonsorbonne.ufr27.miage.camel;
 
 import fr.pantheonsorbonne.ufr27.miage.dto.PartieDetails;
 import fr.pantheonsorbonne.ufr27.miage.dto.StatistiquesRequest;
+import fr.pantheonsorbonne.ufr27.miage.dto.StatistiquesResponse;
 import fr.pantheonsorbonne.ufr27.miage.model.StatistiquesParTheme;
 import fr.pantheonsorbonne.ufr27.miage.service.StatistiquesService;
 import org.apache.camel.builder.RouteBuilder;
@@ -18,6 +19,9 @@ public class CamelRoutes extends RouteBuilder {
 
     @Inject
     StatistiquesService statistiquesService;
+
+    @Inject
+    StatistiquesRequest statistiquesRequest;
 
     @Override
     public void configure() throws Exception {
@@ -57,7 +61,7 @@ public class CamelRoutes extends RouteBuilder {
                 .log("Statistiques mises à jour pour l'utilisateur : ${body.playerId}");
 
         from("sjms2:M1.StatistiquesService")
-                .log("User received from Creation Service")
+                .log("Request received for user and theme verification")
                 .unmarshal().json(StatistiquesRequest.class)
                 .process(exchange -> {
                     StatistiquesRequest request = exchange.getIn().getBody(StatistiquesRequest.class);
@@ -74,18 +78,41 @@ public class CamelRoutes extends RouteBuilder {
                     if (statsParTheme == null) {
                         log.info("No stats found for playerId = {} and theme = {}. Creating new stats.", playerId, theme);
                         statistiquesService.createStatistiqueUser(playerId, theme);
-                        statsParTheme = statistiquesService.getStatistiquesParTheme(playerId, theme);
                     }
 
-                    // Préparation des informations pour la suite
+                    // Préparation des informations pour la prochaine route
                     exchange.getIn().setHeader("playerId", playerId);
                     exchange.getIn().setHeader("theme", theme);
-                    exchange.getIn().setHeader("mmr", statsParTheme.getMmr());
-                    exchange.getIn().setBody(statsParTheme);
                 })
-                .log("Statistiques par thème : ${body}")
+                .log("User and theme verified or created. Passing to the next route.")
+                .to("direct:getMMR");
+
+        from("direct:getMMR")
+                .log("Processing MMR retrieval")
+                .process(exchange -> {
+                    Long playerId = exchange.getIn().getHeader("playerId", Long.class);
+                    String theme = exchange.getIn().getHeader("theme", String.class);
+
+                    // Récupération des statistiques par thème
+                    StatistiquesParTheme statsParTheme = statistiquesService.getStatistiquesParTheme(playerId, theme);
+                    if (statsParTheme == null) {
+                        throw new IllegalArgumentException("Unable to retrieve stats for playerId = " + playerId + " and theme = " + theme);
+                    }
+
+                    // Création de l'objet StatistiquesResponse
+                    StatistiquesResponse response = new StatistiquesResponse();
+                    response.setPlayerId(playerId);
+                    response.setTheme(theme);
+                    response.setMmr(statsParTheme.getMmr());
+
+                    // Préparation de la réponse
+                    exchange.getIn().setBody(response);
+                })
+                .log("Statistiques Response : ${body}")
                 .marshal().json()
-                .to("sjms2:M1.MatchmakingServiceMmr"); // Vous pouvez définir une destination ou un traitement suivant.
+                .log("Apres Jsonnisation: ${body}")
+                .to("sjms2:M1.MatchmakingServiceMmr");
+
 
     }
 }

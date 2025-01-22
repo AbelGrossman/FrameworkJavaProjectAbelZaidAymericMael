@@ -24,9 +24,9 @@
              .unmarshal().json(JsonLibrary.Jackson,UserWithoutMmrRequest.class)
              .bean("UserProcessor", "processNewUser");
 
-         from("direct:userMmrRequest").marshal().json().to("sjms2:M1.StatistiquesService");
+         from("direct:userMmrRequest").log("User send to Statistique : ${body}").marshal().json().to("sjms2:M1.StatistiquesService");
 
-         from("sjms2:M1.MatchmakingServiceMmr")
+         from("sjms2:M1.MatchmakingServiceMmr").log("User received from Statistique : ${body}")
          .unmarshal().json(UserWithMmr.class)
          .bean("RankedUserProcessor", "processRankedUser");
 

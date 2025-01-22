@@ -11,7 +11,7 @@ public class StatistiquesParTheme {
     @Column(name = "idStatistiquesTheme", nullable = false)
     private Integer id;
 
-    @Column(name = "playerId", nullable = false, unique = true,length = 50)
+    @Column(name = "playerId", nullable = false, length = 50)
     private Long playerId;
 
     @Column(name = "theme", nullable = false, length = 45)

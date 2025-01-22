@@ -4,6 +4,7 @@ import fr.pantheonsorbonne.ufr27.miage.model.StatistiquesJoueur;
 import fr.pantheonsorbonne.ufr27.miage.model.StatistiquesParTheme;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
@@ -54,6 +55,7 @@ public class StatistiquesDAOImpl implements StatistiquesDAO {
     }
 
     @Override
+    @ActivateRequestContext
     public StatistiquesParTheme getStatistiquesParTheme(Long playerId, String theme) {
         try {
             return em.createQuery(

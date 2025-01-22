@@ -4,10 +4,10 @@ package fr.pantheonsorbonne.ufr27.miage.dto;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
-public class StatistiquesRequest {
-
+public class StatistiquesResponse {
     private Long playerId;
     private String theme;
+    private Integer mmr;
 
     public Long getPlayerId() {
         return playerId;
@@ -25,6 +25,11 @@ public class StatistiquesRequest {
         this.theme = theme;
     }
 
-    // Classe interne pour la réponse JSON
+    public Integer getMmr() {
+        return mmr;
+    }
 
+    public void setMmr(Integer mmr) {
+        this.mmr = mmr;
+    }
 }
