@@ -1,6 +1,7 @@
 package fr.pantheonsorbonne.ufr27.miage.gateway;
 
 import fr.pantheonsorbonne.ufr27.miage.dto.JoinGameRequest;
+import fr.pantheonsorbonne.ufr27.miage.dto.QuestionDTO;
 import fr.pantheonsorbonne.ufr27.miage.dto.TeamResponseDto;
 import fr.pantheonsorbonne.ufr27.miage.exception.DuplicateRequestException;
 import fr.pantheonsorbonne.ufr27.miage.service.GameCreationService;
@@ -10,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.camel.Exchange;
 import org.apache.camel.ProducerTemplate;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -40,17 +42,19 @@ public class GameCreationGateway {
 
     public void storeTeamAndForwardToQuestions(TeamResponseDto team, Exchange exchange) throws Exception {
         // Store the team response for later use
-        teamResponses.put(team.teamId(), team);
+        teamResponses.put(team.id(), team);
 
         // Set headers for the questions service
-        exchange.getMessage().setHeader("category", team.theme());
+        exchange.getMessage().setBody(null);
+        exchange.getMessage().setHeader("theme", team.theme());
         exchange.getMessage().setHeader("difficulty", team.difficulty());
-        exchange.getMessage().setHeader("teamId", team.teamId());
+        exchange.getMessage().setHeader("id", team.id());
+        System.out.println(team.theme() + ' ' + team.difficulty() + ' ' +team.id());
     }
 
-    public void combineTeamAndQuestions(Map<String, Object> questionsResponse, Exchange exchange) throws Exception {
+    public void combineTeamAndQuestions(List<QuestionDTO> questionsResponse, Exchange exchange) throws Exception {
         // Get teamId from header
-        String teamId = exchange.getMessage().getHeader("teamId", String.class);
+        String teamId = exchange.getMessage().getHeader("id", String.class);
 
         if (teamId == null) {
             exchange.getMessage().setBody(mapper.writeValueAsString(
@@ -67,7 +71,7 @@ public class GameCreationGateway {
             // Combine team and questions data
             Map<String, Object> gameData = Map.of(
                     "team", team,
-                    "questions", questionsResponse.get("questions")
+                    "questions", questionsResponse
             );
 
             exchange.getMessage().setBody(mapper.writeValueAsString(gameData));

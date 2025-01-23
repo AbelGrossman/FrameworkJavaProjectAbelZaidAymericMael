@@ -8,6 +8,8 @@ import jakarta.inject.Inject;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.dataformat.JsonLibrary;
 
+import java.util.List;
+
 
 @ApplicationScoped
 public class GameCreationRoutes extends RouteBuilder {
@@ -29,15 +31,16 @@ public class GameCreationRoutes extends RouteBuilder {
                 .log("Réponse du MatchMaking reçue : ${body}")
                 .unmarshal().json(JsonLibrary.Jackson, TeamResponseDto.class)
                 .bean(gateway, "storeTeamAndForwardToQuestions")
-                .marshal().json()
+                .log("Current headers: ${headers}")
                 .to("sjms2:fetchQuestions");
 
         // Questions -> GameExecution
         from("sjms2:fetchQuestionsResponses")
                 .log("Questions reçues : ${body}")
-                .unmarshal().json()
+                .unmarshal().json(JsonLibrary.Jackson, List.class)
                 .bean(gateway, "combineTeamAndQuestions")
                 .marshal().json()
+                .log("Final Data sent : ${body}")
                 .to("sjms2:DerouleJeuService");
     }
 }

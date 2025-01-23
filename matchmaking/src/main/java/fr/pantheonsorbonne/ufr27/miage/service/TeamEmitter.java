@@ -35,7 +35,7 @@ public class TeamEmitter {
     public Response sendTeamToCreationPartie(List<UserWithMmr> users) {
             int sumMmr=0;
             for(int i=0;i<users.size();i++){
-                sumMmr+=users.get(i).getMmr();
+                sumMmr+=users.get(i).mmr();
             }
             int meanMmmr = sumMmr/users.size();
             String difficulty="";
@@ -48,7 +48,11 @@ public class TeamEmitter {
             else{
                 difficulty= "hard";
             }
-            Team team = new Team(users.get(0).getTheme(), users, difficulty);
+        // Extract user IDs
+        List<Long> userIds = users.stream()
+                .map(UserWithMmr::playerId)
+                .toList();
+            Team team = new Team(users.get(0).theme(), userIds, difficulty);
             entityManager.persist(team);
             producerTemplate.sendBody("direct:newTeam", team);
             return Response.ok().build();
