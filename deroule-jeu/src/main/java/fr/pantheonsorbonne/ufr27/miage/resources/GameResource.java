@@ -16,8 +16,8 @@ import java.util.List;
 import java.util.Map;
 
 @Path("/game")
-@Produces("application/json")
-@Consumes("application/json")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 public class GameResource {
 
     @Inject
@@ -25,66 +25,104 @@ public class GameResource {
 
     @POST
     @Path("/initialize")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Initialize the game", description = "Initialize the game with player IDs, difficulty, category, total questions, and questions.")
-    @APIResponse(responseCode = "200", description = "Game initialized successfully")
+    @Operation(summary = "Initialize the game")
+    @APIResponse(responseCode = "201", description = "Game initialized successfully")
     public Response initializeGame(@RequestBody GameInitializationRequest request) {
-        String gameId = gameService.initializeGame(
-                request.getPlayerIds(),
-                request.getTotalQuestions(),
-                request.getQuestions()
-        );
-        return Response.ok().entity("Game initialized with ID: " + gameId).build();
+        try {
+            Long gameId = gameService.initializeGame(
+                    request.playerIds(),
+                    request.category(),
+                    request.difficulty(),
+                    request.totalQuestions(),
+                    request.questions());
+            return Response.status(Response.Status.CREATED).entity(Map.of("gameId", gameId)).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(Map.of("error", e.getMessage())).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(Map.of("error", "Failed to initialize game")).build();
+        }
     }
 
     @POST
-    @Path("/finish")
-    @Operation(summary = "Finish the game", description = "Finish the game and display final scores.")
-    @APIResponse(responseCode = "200", description = "Game finished successfully")
-    public Response finishGame() {
-        gameService.finishGame();
-        return Response.ok().entity("Game finished").build();
-    }
-
-    @GET
-    @Path("/questions")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Get questions for the game", description = "Retrieve the list of questions for the current game.")
-    @APIResponse(responseCode = "200", description = "Questions retrieved successfully")
-    public Response getQuestionsForGame(@QueryParam("playerId") String playerId) {
+    @Path("/submitAnswer")
+    @Operation(summary = "Submit an answer")
+    @APIResponse(responseCode = "200", description = "Answer submitted successfully")
+    public Response submitAnswer(@RequestBody AnswerRequest request) {
         try {
-            List<QuestionDTO> questions = gameService.getQuestionsForGame(playerId);
-            return Response.ok(questions).build();
+            int updatedScore = gameService.processAnswer(request.playerId(), request.answer());
+            return Response.ok()
+                    .entity(Map.of(
+                            "score", updatedScore,
+                            "message", "Answer submitted successfully",
+                            "correct", updatedScore > gameService.getPlayerScore(request.playerId())))
+                    .build();
         } catch (RuntimeException e) {
-            return Response.status(Response.Status.FORBIDDEN).entity(e.getMessage()).build();
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", e.getMessage()))
+                    .build();
         }
     }
 
     @GET
     @Path("/state")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Get current game state", description = "Get the current game state including timer and answer status")
+    @Operation(summary = "Get current game state")
+    @APIResponse(responseCode = "200", description = "Game state retrieved successfully")
     public Response getGameState(@QueryParam("playerId") String playerId) {
         try {
             Map<String, Object> gameState = gameService.getCurrentGameState(playerId);
             return Response.ok(gameState).build();
         } catch (RuntimeException e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", e.getMessage()))
+                    .build();
+        }
+    }
+
+    @GET
+    @Path("/fetchQuestions")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Fetch questions for the game")
+    @APIResponse(responseCode = "200", description = "Questions retrieved successfully")
+    public Response fetchQuestions(@QueryParam("playerId") String playerId) {
+        try {
+            List<QuestionDTO> questions = gameService.getQuestionsForGame(playerId);
+            return Response.ok(questions).build();
+        } catch (RuntimeException e) {
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity(Map.of("error", e.getMessage()))
+                    .build();
+        }
+    }
+
+    @GET
+    @Path("/score")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Get player score")
+    @APIResponse(responseCode = "200", description = "Player score retrieved successfully")
+    public Response getPlayerScore(@QueryParam("playerId") String playerId) {
+        try {
+            int score = gameService.getPlayerScore(playerId);
+            return Response.ok(Map.of("score", score)).build();
+        } catch (RuntimeException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", e.getMessage()))
+                    .build();
         }
     }
 
     @POST
-    @Path("/answer")
-    @Operation(summary = "Submit an answer", description = "Submit an answer for the current question.")
-    @APIResponse(responseCode = "200", description = "Answer submitted successfully")
-    public Response submitAnswer(@RequestBody AnswerRequest request) {
+    @Path("/finish")
+    @Operation(summary = "Finish the game")
+    @APIResponse(responseCode = "200", description = "Game finished successfully")
+    public Response finishGame() {
         try {
-            int updatedScore = gameService.processAnswer(request.getPlayerId(), request.getAnswer());
+            gameService.finishGame();
             return Response.ok()
                     .entity(Map.of(
-                            "score", updatedScore,
-                            "message", "Answer submitted successfully"
-                    ))
+                            "message", "Game finished successfully",
+                            "gameStatus", "complete"))
                     .build();
         } catch (RuntimeException e) {
             return Response.status(Response.Status.BAD_REQUEST)

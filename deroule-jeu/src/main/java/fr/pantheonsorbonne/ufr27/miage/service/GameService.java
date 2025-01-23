@@ -8,6 +8,8 @@ import fr.pantheonsorbonne.ufr27.miage.model.Player;
 import fr.pantheonsorbonne.ufr27.miage.model.Question;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,33 +35,51 @@ public class GameService {
     @Inject
     GameDAO gameDAO;
 
-    public String initializeGame(List<String> playerIds, int totalQuestions, List<QuestionDTO> questions) {
-        if (playerIds == null || playerIds.size() != 6) {
-            throw new IllegalArgumentException("Game must have exactly 6 players.");
+    @Transactional
+    public Long initializeGame(List<String> playerIds, String category, String difficulty, int totalQuestions,
+            List<QuestionDTO> questions) {
+        try {
+            logger.info("Initializing game with category: {}, difficulty: {}, totalQuestions: {}",
+                    category, difficulty, totalQuestions);
+            logger.info("Player IDs: {}", playerIds);
+            logger.info("Questions size: {}", questions.size());
+
+            if (playerIds == null || playerIds.size() != 6) {
+                throw new IllegalArgumentException("Game must have exactly 6 players.");
+            }
+
+            if (totalQuestions <= 0) {
+                throw new IllegalArgumentException("Total questions must be greater than 0.");
+            }
+
+            if (questions == null || questions.size() != totalQuestions) {
+                throw new IllegalArgumentException("Number of questions does not match totalQuestions.");
+            }
+
+            List<Player> players = retrievePlayers(playerIds);
+            logger.info("Created players: {}", players.size());
+
+            List<Question> questionEntities = questions.stream()
+                    .map(q -> new Question(q.type(), q.difficulty(), q.category(),
+                            q.question(), q.correct_answer(), q.incorrect_answers()))
+                    .collect(Collectors.toList());
+            logger.info("Mapped questions: {}", questionEntities.size());
+
+            currentGame = new Game(category, difficulty, players, totalQuestions, questionEntities);
+            logger.info("Game created, saving to database...");
+
+            gameDAO.save(currentGame);
+            logger.info("Game saved with ID: {}", currentGame.getId());
+
+            scheduler = Executors.newSingleThreadScheduledExecutor();
+            resetPlayerAnsweredStatus();
+            startQuestionTimer();
+
+            return currentGame.getId();
+        } catch (Exception e) {
+            logger.error("Error initializing game:", e);
+            throw e;
         }
-        if (totalQuestions <= 0) {
-            throw new IllegalArgumentException("Total questions must be greater than 0.");
-        }
-        if (questions == null || questions.size() != totalQuestions) {
-            throw new IllegalArgumentException("Number of questions does not match totalQuestions.");
-        }
-
-        List<Player> players = retrievePlayers(playerIds);
-        String gameId = UUID.randomUUID().toString();
-        List<Question> questionEntities = questions.stream()
-                .map(q -> new Question(q.getType(), q.getDifficulty(), q.getCategory(),
-                        q.getQuestion(), q.getCorrect_answer(), q.getIncorrect_answers()))
-                .collect(Collectors.toList());
-
-        currentGame = new Game(gameId, players, totalQuestions, questionEntities);
-
-        // Initialize timer components
-        scheduler = Executors.newSingleThreadScheduledExecutor();
-        resetPlayerAnsweredStatus();
-        startQuestionTimer();
-
-        logger.info("Game initialized with ID: {} and {} questions", gameId, totalQuestions);
-        return gameId;
     }
 
     private List<Player> retrievePlayers(List<String> playerIds) {
@@ -70,8 +90,7 @@ public class GameService {
 
     private void resetPlayerAnsweredStatus() {
         playerAnswered.clear();
-        currentGame.getPlayers().forEach(player ->
-                playerAnswered.put(player.getPlayerId(), false));
+        currentGame.getPlayers().forEach(player -> playerAnswered.put(player.getPlayerId(), false));
         questionStartTime = System.currentTimeMillis();
     }
 
@@ -236,13 +255,13 @@ public class GameService {
 
         // Save player results to another microservice
         for (Player player : players) {
-            PlayerResultsRequest playerResultsRequest = new PlayerResultsRequest();
-            playerResultsRequest.setPlayerId(player.getPlayerId());
-            playerResultsRequest.setScore(player.getScore());
-            playerResultsRequest.setAverageResponseTime("1.1s"); // Placeholder for average response time
-            playerResultsRequest.setCategory(currentGame.getQuestions().get(0).getCategory());
-            playerResultsRequest.setTotalQuestions(currentGame.getTotalQuestions());
-            playerResultsRequest.setRank(ranks.get(players.indexOf(player)));
+            PlayerResultsRequest playerResultsRequest = new PlayerResultsRequest(
+                    player.getPlayerId(),
+                    player.getScore(),
+                    "1.1s", // Placeholder for average response time
+                    currentGame.getQuestions().get(0).getCategory(),
+                    currentGame.getTotalQuestions(),
+                    ranks.get(players.indexOf(player)));
 
             // Send player results to another microservice
             sendPlayerResults(playerResultsRequest);
@@ -255,7 +274,23 @@ public class GameService {
     }
 
     private void sendPlayerResults(PlayerResultsRequest playerResultsRequest) {
-        // Implement logic to send player results to another microservice
         logger.info("Sending player results: {}", playerResultsRequest);
     }
+
+    public int getPlayerScore(String playerId) {
+        Player player = getPlayerById(currentGame, playerId);
+        if (player == null) {
+            throw new RuntimeException("Player not found");
+        }
+        return player.getScore();
+    }
+
+    public void incrementScore(String playerId) {
+        Player player = getPlayerById(currentGame, playerId);
+        if (player == null) {
+            throw new RuntimeException("Player not found");
+        }
+        player.setScore(player.getScore() + 1);
+    }
+
 }

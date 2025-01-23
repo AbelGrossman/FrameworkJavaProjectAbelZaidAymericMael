@@ -1,7 +1,6 @@
 package fr.pantheonsorbonne.ufr27.miage.model;
 
 import jakarta.persistence.*;
-
 import java.util.List;
 
 @Entity
@@ -9,12 +8,17 @@ public class Game {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String gameId;
+
+    private String category;
+    private String difficulty;
+    private int totalQuestions;
+
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Player> players;
-    private int totalQuestions;
+
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Question> questions;
+
     @ElementCollection
     private List<Integer> ranks;
 
@@ -22,32 +26,17 @@ public class Game {
         // Default constructor
     }
 
-    public Game(String gameId, List<Player> players, int totalQuestions, List<Question> questions) {
-        this.gameId = gameId;
+    public Game(String category, String difficulty, List<Player> players, int totalQuestions,
+            List<Question> questions) {
+        this.category = category;
+        this.difficulty = difficulty;
         this.players = players;
         this.totalQuestions = totalQuestions;
         this.questions = questions;
-        this.ranks = List.of(0, 0, 0, 0, 0, 0); // Initialize ranks with zeros
+        this.ranks = List.of(0, 0, 0, 0, 0, 0);
     }
 
-    // Getters and Setters
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getGameId() {
-        return gameId;
-    }
-
-    public void setGameId(String gameId) {
-        this.gameId = gameId;
-    }
-
+    // Existing getters and setters for players
     public List<Player> getPlayers() {
         return players;
     }
@@ -56,6 +45,32 @@ public class Game {
         this.players = players;
     }
 
+    // New getters and setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getDifficulty() {
+        return difficulty;
+    }
+
+    public void setDifficulty(String difficulty) {
+        this.difficulty = difficulty;
+    }
+
+    // Existing getters and setters
     public int getTotalQuestions() {
         return totalQuestions;
     }
