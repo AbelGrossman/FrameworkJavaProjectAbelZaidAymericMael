@@ -8,12 +8,16 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.camel.Exchange;
+import org.apache.camel.ProducerTemplate;
+
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @ApplicationScoped
 public class GameCreationGateway {
+
+    @Inject
+    ProducerTemplate producerTemplate;
 
     @Inject
     GameCreationService gameService;
@@ -21,14 +25,13 @@ public class GameCreationGateway {
     private final ObjectMapper mapper = new ObjectMapper();
     private final ConcurrentHashMap<String, TeamResponseDto> teamResponses = new ConcurrentHashMap<>();
 
-    public void handlePlayerRequest(String body, Exchange exchange) throws Exception {
-        JoinGameRequest request = mapper.readValue(body, JoinGameRequest.class);
+    public void handlePlayerRequest(JoinGameRequest body, Exchange exchange) throws Exception {
         try {
-            gameService.validateNewRequest(request.playerId());
-            gameService.createNewRequest(request.playerId());
-            gameService.updateToMatchmaking(request.playerId());
+            gameService.validateNewRequest(body.playerId());
+            gameService.createNewRequest(body.playerId());
+            gameService.updateToMatchmaking(body.playerId());
 
-            exchange.getMessage().setBody(request);
+            exchange.getMessage().setBody(body);
         } catch (DuplicateRequestException e) {
             exchange.getMessage().setBody(mapper.writeValueAsString(Map.of("error", e.getMessage())));
             exchange.getMessage().setHeader(Exchange.HTTP_RESPONSE_CODE, 409);
@@ -45,7 +48,6 @@ public class GameCreationGateway {
         exchange.getMessage().setHeader("teamId", team.teamId());
     }
 
-    @SuppressWarnings("unchecked")
     public void combineTeamAndQuestions(Map<String, Object> questionsResponse, Exchange exchange) throws Exception {
         // Get teamId from header
         String teamId = exchange.getMessage().getHeader("teamId", String.class);
@@ -77,4 +79,19 @@ public class GameCreationGateway {
             exchange.getMessage().setHeader(Exchange.HTTP_RESPONSE_CODE, 404);
         }
     }
+    public void publishJoinRequest(JoinGameRequest request) throws Exception {
+        producerTemplate.sendBody(
+                "direct:CreationPartieService",
+                mapper.writeValueAsString(request)
+        );
+    }
+
+
+
+    public void publishCancelRequest(long playerId) throws  Exception {
+        producerTemplate.sendBody(
+                    "sjms2:M1.MatchmakingService",
+                    mapper.writeValueAsString(playerId)
+            );
+            gameService.cancelRequest(playerId);}
 }
