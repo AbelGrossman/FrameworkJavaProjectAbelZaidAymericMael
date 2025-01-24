@@ -2,25 +2,25 @@ package fr.pantheonsorbonne.ufr27.miage.camel.gateway;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import fr.pantheonsorbonne.ufr27.miage.dto.QuestionDTO;
-import fr.pantheonsorbonne.ufr27.miage.dto.TheTriviaDTO;
+import fr.pantheonsorbonne.ufr27.miage.dto.*;
 import fr.pantheonsorbonne.ufr27.miage.exception.APIException;
 import fr.pantheonsorbonne.ufr27.miage.map.QuestionMapper;
-import fr.pantheonsorbonne.ufr27.miage.service.TheTriviaRestClient;
+import fr.pantheonsorbonne.ufr27.miage.service.OpenDataRestClient;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import org.apache.camel.CamelContext;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import fr.pantheonsorbonne.ufr27.miage.dto.QuestionDTO;
+
 
 @ApplicationScoped
-public class TheTriviaGateway {
+public class OpenDataGateway {
 
     @Inject
     @RestClient
-    TheTriviaRestClient theTriviaRestClient;
+    OpenDataRestClient openDataRestClient;
 
     @Inject
     QuestionMapper questionMapper;
@@ -28,14 +28,14 @@ public class TheTriviaGateway {
 
     public List<QuestionDTO> fetchQuestions(int limit, String category, String difficulty) {
         try {
-            String jsonResponse = theTriviaRestClient.getQuestions(limit, category, difficulty);
+            String jsonResponse = openDataRestClient.getQuestions(limit, category, difficulty);
 
-            List<TheTriviaDTO> triviaDTOs = new ObjectMapper()
+            List<OpenDataDTO> openDataDTOs = new ObjectMapper()
                     .readValue(jsonResponse, new TypeReference<>() {
                     });
 
-            return triviaDTOs.stream()
-                    .map(questionMapper::mapTriviaToQuestionDTO)
+            return openDataDTOs.stream()
+                    .map(questionMapper::mapOpenDataToQuestionDTO)
                     .collect(Collectors.toList());
 
         } catch (Exception e) {
