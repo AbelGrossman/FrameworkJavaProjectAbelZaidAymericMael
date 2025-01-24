@@ -4,6 +4,7 @@ import fr.pantheonsorbonne.ufr27.miage.dao.GameDAO;
 import fr.pantheonsorbonne.ufr27.miage.dto.QuestionDTO;
 import fr.pantheonsorbonne.ufr27.miage.model.Game;
 import fr.pantheonsorbonne.ufr27.miage.model.Player;
+import fr.pantheonsorbonne.ufr27.miage.model.PlayerResult;
 import fr.pantheonsorbonne.ufr27.miage.model.Question;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -29,6 +30,8 @@ public class GameService {
     private ScheduledExecutorService scheduler;
     private ScheduledFuture<?> currentTimer;
     private Map<String, Boolean> playerAnswered = new ConcurrentHashMap<>();
+    private Map<String, List<Long>> playerResponseTimes = new ConcurrentHashMap<>();
+
     private long questionStartTime;
     private boolean isShowingAnswer = false;
     private long gameId;
@@ -132,7 +135,7 @@ public class GameService {
         }, ANSWER_DISPLAY_SECONDS, TimeUnit.SECONDS);
     }
 
-    public int processAnswer(String playerId, String answer) {
+    public int processAnswer(String playerId, String answer, long responseTime) {
         if (currentGame == null) {
             throw new RuntimeException("Game not initialized");
         }
@@ -155,6 +158,14 @@ public class GameService {
             logger.error("Player {} not found", playerId);
             throw new RuntimeException("Player not found");
         }
+
+        // Record response time
+        playerResponseTimes.computeIfAbsent(playerId, k -> new ArrayList<>()).add(responseTime);
+
+        // Update average response time
+        List<Long> times = playerResponseTimes.get(playerId);
+        double averageTime = times.stream().mapToLong(Long::valueOf).average().orElse(0.0);
+        player.setAverageResponseTime((long) averageTime);
 
         boolean isCorrect = checkAnswer(answer, currentQuestion);
         if (isCorrect) {
@@ -247,6 +258,7 @@ public class GameService {
                 .anyMatch(player -> player.getPlayerId().equals(playerId));
     }
 
+    @Transactional
     public void finishGame(Long gameId) {
         Game game = gameDAO.findById(gameId).orElseThrow(() -> new RuntimeException("Game not found"));
         if (game == null) {
@@ -257,12 +269,23 @@ public class GameService {
         logger.info("Game finished. Final ranks: {}", game.getRanks());
         game.setOver(true);
         gameDAO.save(game);
+        saveData(players, gameId);
 
-        for (Player player : players) {
-            savePlayerResult(player.getPlayerId(), game.getId(), player.getScore(), player.getAverageResponseTime(), 0, game.getCategory(), game.getTotalQuestions());
+    }
+
+    @Transactional
+    public void saveData(List<Player> players, Long gameId) {
+        Game game = gameDAO.findById(gameId).orElseThrow(() -> new RuntimeException("Game not found"));
+        if (game == null) {
+            logger.error("Game with ID {} not found", gameId);
+            throw new RuntimeException("Game not found");
         }
-
-        // Cleanup
+        for (Player player : players) {
+            if (!gameDAO.playerResultExists(player.getPlayerId(), game.getId())) {
+                savePlayerResult(player.getPlayerId(), game.getId(), player.getScore(), player.getAverageResponseTime(),
+                        0, game.getCategory(), game.getTotalQuestions());
+            }
+        }
         if (scheduler != null) {
             scheduler.shutdown();
         }
@@ -284,7 +307,39 @@ public class GameService {
         player.setScore(player.getScore() + 1);
     }
 
-    public void savePlayerResult(String playerId, Long gameId, int score, long averageResponseTime, int rank, String category, int totalQuestions) {
+    public void savePlayerResult(String playerId, Long gameId, int score, long averageResponseTime, int rank,
+            String category, int totalQuestions) {
         gameDAO.savePlayerResults(playerId, gameId, score, averageResponseTime, rank, category, totalQuestions);
+    }
+
+    @Transactional
+    public Map<String, Integer> getGameRankings(Long gameId) {
+        List<PlayerResult> results = gameDAO.findPlayerResultsByGameId(gameId);
+
+        if (results.isEmpty()) {
+            throw new RuntimeException("No results found for game " + gameId);
+        }
+
+        // Sort by score (desc) then response time (asc)
+        List<PlayerResult> rankedPlayers = results.stream()
+                .sorted((p1, p2) -> {
+                    int scoreCompare = Integer.compare(p2.getScore(), p1.getScore());
+                    return scoreCompare != 0 ? scoreCompare
+                            : Long.compare(p1.getAverageResponseTime(), p2.getAverageResponseTime());
+                })
+                .collect(Collectors.toList());
+
+        // Update ranks in database
+        for (int i = 0; i < rankedPlayers.size(); i++) {
+            PlayerResult player = rankedPlayers.get(i);
+            player.setRank(i + 1);
+            gameDAO.updatePlayerResult(player);
+        }
+
+        // Create rankings map
+        Map<String, Integer> rankings = new HashMap<>();
+        rankedPlayers.forEach(player -> rankings.put(player.getPlayerId(), player.getRank()));
+
+        return rankings;
     }
 }

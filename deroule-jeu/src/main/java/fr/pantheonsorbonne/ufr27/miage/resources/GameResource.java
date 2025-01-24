@@ -67,7 +67,7 @@ public class GameResource {
     @APIResponse(responseCode = "200", description = "Answer submitted successfully")
     public Response submitAnswer(@RequestBody AnswerRequest request) {
         try {
-            int updatedScore = gameService.processAnswer(request.playerId(), request.answer());
+            int updatedScore = gameService.processAnswer(request.playerId(), request.answer(), request.responseTime());
             return Response.ok()
                     .entity(Map.of(
                             "score", updatedScore,
@@ -148,14 +148,14 @@ public class GameResource {
         }
     }
 
-
     @POST
     @Path("/createPlayerResult")
     @Operation(summary = "Create player result")
     @APIResponse(responseCode = "201", description = "Player result created successfully")
     public Response createPlayerResult(@RequestBody PlayerResultsRequest request) {
         try {
-            gameService.savePlayerResult(request.playerId(), request.gameId(), request.score(), request.averageResponseTime(), 0 , request.category(), request.totalQuestions());
+            gameService.savePlayerResult(request.playerId(), request.gameId(), request.score(),
+                    request.averageResponseTime(), 0, request.category(), request.totalQuestions());
             return Response.status(Response.Status.CREATED)
                     .entity(Map.of("message", "Player result created successfully"))
                     .build();
@@ -164,6 +164,21 @@ public class GameResource {
                     .entity(Map.of("error", e.getMessage()))
                     .build();
         }
-       
+
+    }
+
+    @GET
+    @Path("/rankings/{gameId}")
+    @Operation(summary = "Get game rankings")
+    @APIResponse(responseCode = "200", description = "Rankings retrieved successfully")
+    public Response getGameRankings(@PathParam("gameId") Long gameId) {
+        try {
+            Map<String, Integer> rankings = gameService.getGameRankings(gameId);
+            return Response.ok(rankings).build();
+        } catch (RuntimeException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", e.getMessage()))
+                    .build();
+        }
     }
 }

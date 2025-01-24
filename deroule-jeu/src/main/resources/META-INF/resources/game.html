@@ -74,6 +74,37 @@
                 opacity: 0;
             }
         }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            border: 1px solid #ddd;
+        }
+
+        .leaderboard-table th,
+        .leaderboard-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .leaderboard-table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+
+        .current-player-row {
+            background-color: #e3f2fd;
+            font-weight: bold;
+        }
+
+        .leaderboard-header {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #333;
+        }
     </style>
 </head>
 
@@ -81,6 +112,7 @@
     <h1 id="game-title">Quiz Game</h1>
     <div id="timer"></div>
     <div id="score">Score: 0</div>
+    <div id="average-time">Average Response Time: 0ms</div>
     <div id="questions"></div>
 
     <script>
@@ -93,6 +125,9 @@
         let answerSubmitted = false;
         let gameStateInterval;
         let lastSubmittedAnswer = '';
+        let questionDisplayTime;
+        let totalResponseTime = 0;
+        let questionCount = 0;
 
         function initializeGame() {
             const playerId = urlParams.get('playerId');
@@ -196,6 +231,7 @@
         }
 
         function displayCurrentQuestion() {
+            questionDisplayTime = Date.now();
             const questionsDiv = document.getElementById('questions');
             questionsDiv.innerHTML = '';
             answerSubmitted = false;
@@ -222,11 +258,12 @@
                 questionsDiv.appendChild(questionDiv);
             } else {
                 questionsDiv.innerHTML = `
-        <div class="question-container">
-            <h3>Game completed!</h3>
-            <p>Final score: ${score}</p>
-            <div id="final-results">Loading final results...</div>
-        </div>`;
+                <div class="question-container">
+                    <h3>Game completed!</h3>
+                    <p>Final score: ${score}</p>
+                    <p>Average response time: ${Math.round(totalResponseTime / questionCount)}ms</p>
+                    <div id="final-results">Loading final results...</div>
+                </div>`;
                 clearInterval(gameStateInterval);
                 finishGame();
             }
@@ -240,6 +277,12 @@
 
         function submitAnswer(answer) {
             if (answerSubmitted) return;
+            const responseTime = Date.now() - questionDisplayTime;
+            totalResponseTime += responseTime;
+            questionCount++;
+            const averageTime = Math.round(totalResponseTime / questionCount);
+            document.getElementById('average-time').innerText = `Average Response Time: ${averageTime}ms`;
+
             answerSubmitted = true;
             lastSubmittedAnswer = answer;
 
@@ -251,7 +294,8 @@
                 body: JSON.stringify({
                     playerId: playerId,
                     answer: answer,
-                    startTime: Date.now()
+                    startTime: questionDisplayTime,
+                    responseTime: responseTime
                 })
             })
                 .then(response => {
@@ -272,67 +316,83 @@
         }
 
         function finishGame() {
-            console.log('Current gameId:', gameId);
-            console.log('Current gameState:', {
-                playerId,
-                currentQuestionIndex,
-                score,
-                questions: questions.length
-            });
-
             if (!gameId) {
                 console.error('No gameId available');
                 return;
             }
 
-            // First save player results
             const playerResult = {
                 playerId: playerId,
                 gameId: gameId,
                 score: score,
-                averageResponseTime: 0, // You can calculate this if needed
+                averageResponseTime: Math.round(totalResponseTime / questionCount),
                 category: questions[0].category,
                 totalQuestions: questions.length,
-                rank: 0 // Rank can be calculated server-side if needed
+                rank: 0
             };
 
             fetch('/game/createPlayerResult', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(playerResult)
             })
-            .then(response => {
-                if (!response.ok) throw new Error('Failed to save player results');
-                return fetch(`/game/finish?gameId=${gameId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-            })
-            .then(response => {
-                console.log('Finish response status:', response.status);
-                return response.json();
-            })
-            .then(data => {
-                console.log('Finish response data:', data);
-                const questionsDiv = document.getElementById('questions');
-                questionsDiv.innerHTML = `
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to save player results');
+                    return fetch(`/game/finish?gameId=${gameId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const questionsDiv = document.getElementById('questions');
+                    questionsDiv.innerHTML = `
             <div class="question-container">
                 <h3>Game completed!</h3>
                 <p>Final score: ${score}</p>
-                <button onclick="window.location.href='/'" class="answer-button">Return to Home</button>
+                <p>Final average response time: ${Math.round(totalResponseTime / questionCount)}ms</p>
+                <div id="leaderboard">Loading leaderboard...</div>
             </div>`;
-                clearInterval(gameStateInterval);
-            })
-            .catch(error => {
-                console.error('Error finishing game:', error);
-                alert('Failed to finish game. Error: ' + error.message);
-            });
 
+                    // Wait 20s then fetch and display rankings
+                    setTimeout(() => {
+                        fetch(`/game/rankings/${gameId}`)
+                            .then(response => response.json())
+                            .then(rankings => {
+                                const leaderboardDiv = document.getElementById('leaderboard');
+                                const leaderboardHtml = `
+                        <h3 class="leaderboard-header">Final Rankings</h3>
+                        <table class="leaderboard-table">
+                            <tr>
+                                <th>Rank</th>
+                                <th>Player</th>
+                                <th>Status</th>
+                            </tr>
+                            ${Object.entries(rankings)
+                                        .sort((a, b) => a[1] - b[1])
+                                        .map(([pid, rank]) => `
+                                    <tr class="${pid === playerId ? 'current-player-row' : ''} ${rank <= 3 ? 'rank-' + rank : ''}">
+                                        <td>#${rank}</td>
+                                        <td>Player ${pid}</td>
+                                        <td>${pid === playerId ? 'YOU' : ''}</td>
+                                    </tr>`
+                                        ).join('')}
+                        </table>
+                        <br>
+                        <button onclick="window.location.href='/'" class="answer-button">Return to Home</button>
+                    `;
+                                leaderboardDiv.innerHTML = leaderboardHtml;
+                            });
+                    }, 15000);
+
+                    clearInterval(gameStateInterval);
+                })
+                .catch(error => {
+                    console.error('Error finishing game:', error);
+                    alert('Failed to finish game. Error: ' + error.message);
+                });
         }
+
         // Start the game by initializing it
         initializeGame();
         getGameId();
