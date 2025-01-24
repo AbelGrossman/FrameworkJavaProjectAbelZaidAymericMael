@@ -1,63 +1,144 @@
 package fr.pantheonsorbonne.ufr27.miage.service;
 
+import fr.pantheonsorbonne.ufr27.miage.dao.TeamDAO;
+import fr.pantheonsorbonne.ufr27.miage.dto.UserWithMmr;
 import fr.pantheonsorbonne.ufr27.miage.model.Queue;
-import fr.pantheonsorbonne.ufr27.miage.dto.User;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
+import jakarta.ws.rs.*;
+
+
+@Path("/queue")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 @ApplicationScoped
 public class QueueManager {
-    private final Map<String, List<Queue>> queues = new HashMap<>();
-    private final int queueSizeLimit = 50;
 
-    public synchronized Queue getOrCreateQueue(String theme) {
-        queues.putIfAbsent(theme, new ArrayList<>());
-        List<Queue> themeQueues = queues.get(theme);
+    @Inject
+    TeamDAO teamDAO;
 
-        // Get the first non-full queue or create a new one
-        for (Queue queue : themeQueues) {
-            if (!queue.isFull()) {
-                return queue;
+    private final Map<String, Queue> queues = new HashMap<>();
+
+    private final Map<String, Long> lastTeamFormedTime = new HashMap<>();
+
+    private final int mmrAdjustmentInterval= 10_000;
+
+
+    public QueueManager(TeamDAO teamDAO) {
+        this.teamDAO = teamDAO;
+    }
+    
+    public Queue getOrCreateQueue(String theme) {
+        Queue queue = queues.get(theme);
+        if (queue == null) {
+            queue = new Queue(theme);
+            queues.put(theme, queue);
+        }
+        return queue;
+    }
+
+    public Response addPlayerToQueue(UserWithMmr user) {
+        Queue queue = getOrCreateQueue(user.theme());
+        synchronized (queue) {
+            queue.addPlayer(user);
+        }
+        return Response.ok().build();
+    } 
+    public void formTeams(@PathParam("theme") String theme) {
+        Queue queue = getOrCreateQueue(theme);
+    
+        synchronized (queue) {
+            List<UserWithMmr> players = queue.getPlayers();
+            players.sort(Comparator.comparingInt(UserWithMmr::mmr));
+
+            List<List<UserWithMmr>> teams = new ArrayList<>();
+            List<UserWithMmr> currentTeam = new ArrayList<>();
+            boolean teamFormed = false;
+    
+            for (UserWithMmr player : players) {
+                if (currentTeam.size()<6 && (currentTeam.isEmpty() || 
+                    player.mmr() - currentTeam.get(0).mmr() <= queue.getAllowedMmrDifference())) {
+                    currentTeam.add(player);
+                } else {
+                    if (currentTeam.size() == 6) {
+                        teams.add(new ArrayList<>(currentTeam));
+                        players.removeAll(currentTeam);
+                        teamFormed = true;
+                    }
+                    currentTeam.clear();
+                    currentTeam.add(player);
+                }
+            }
+    
+            if (currentTeam.size() == 6) {
+                teams.add(new ArrayList<>(currentTeam));
+                players.removeAll(currentTeam);
+                teamFormed = true;
+            }
+    
+            for (List<UserWithMmr> team : teams) {
+                teamDAO.addTeamToDatabase(team);
+            }
+    
+            if (teamFormed) {
+                queue.setAllowedMmrDifference(20);
+                lastTeamFormedTime.put(theme, System.currentTimeMillis());
             }
         }
-
-        // Create a new queue if all are full
-        Queue newQueue = new Queue(theme);
-        themeQueues.add(newQueue);
-        return newQueue;
     }
 
-    public synchronized void addPlayerToQueue(User user) {
-        Queue queue = getOrCreateQueue(user.getTheme());
-        queue.addPlayer(user);
-        sortQueue(queue);
+    public void adjustMmrDifferencePeriodically() {
+        long currentTime = System.currentTimeMillis();
+
+        for (Map.Entry<String, Queue> entry : queues.entrySet()) {
+            String theme = entry.getKey();
+            Queue queue = entry.getValue();
+
+            synchronized (queue) {
+                long lastFormedTime = lastTeamFormedTime.getOrDefault(theme, 0L);
+
+                if (currentTime - lastFormedTime >= mmrAdjustmentInterval) {
+                    queue.setAllowedMmrDifference(queue.getAllowedMmrDifference() + 20);
+                    lastTeamFormedTime.put(theme, currentTime);
+                }
+            }
+        }
     }
 
-    private void sortQueue(Queue queue) {
-        queue.getPlayers().sort(Comparator.comparingInt(User::getMmr));
+    public List<String> getThemes() {
+        return new ArrayList<>(queues.keySet());
     }
 
-    public synchronized List<User> findTeam(String theme, int allowedMmrDifference) {
-        List<Queue> themeQueues = queues.getOrDefault(theme, new ArrayList<>());
-        for (Queue queue : themeQueues) {
-            List<User> players = queue.getPlayers();
-            List<User> team = new ArrayList<>();
+    public Map<String, Queue> getQueues() {
+        return queues;
+    }
 
-            for (User player : players) {
-                if (team.isEmpty() || Math.abs(team.get(0).getMmr() - player.getMmr()) <= allowedMmrDifference) {
-                    team.add(player);
-                    if (team.size() == 6) {
-                        queue.getPlayers().removeAll(team);
-                        return team;
+    public Map<String, Long> getLastTeamFormedTime() {
+        return lastTeamFormedTime;
+    }
+
+    public void removePlayerFromQueue(Long userId){
+        for(Queue queue : queues.values()){
+            synchronized (queue) {
+                List<UserWithMmr> players = queue.getPlayers();
+                for(UserWithMmr player : players){
+                    if(player.playerId().equals(userId)){
+                        queue.removePlayer(player);
                     }
                 }
             }
         }
-        return new ArrayList<>();
     }
+
 }
