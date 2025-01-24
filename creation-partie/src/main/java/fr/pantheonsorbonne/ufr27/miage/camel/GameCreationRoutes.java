@@ -42,5 +42,12 @@ public class GameCreationRoutes extends RouteBuilder {
                 .marshal().json()
                 .log("Final Data sent : ${body}")
                 .to("sjms2:DerouleJeuService");
+
+        from("sjms2:DerouleJeuServiceFinished")
+                .log("Message reçue : ${body}")
+                .unmarshal().json(JsonLibrary.Jackson, List.class)
+                .bean(gateway,"handleUpdateToFinished");
+
+
     }
 }

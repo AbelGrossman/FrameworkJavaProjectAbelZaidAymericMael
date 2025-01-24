@@ -4,6 +4,8 @@ import fr.pantheonsorbonne.ufr27.miage.dto.JoinGameRequest;
 import fr.pantheonsorbonne.ufr27.miage.dto.QuestionDTO;
 import fr.pantheonsorbonne.ufr27.miage.dto.TeamResponseDto;
 import fr.pantheonsorbonne.ufr27.miage.exception.DuplicateRequestException;
+import fr.pantheonsorbonne.ufr27.miage.exception.JoinRequestNotFoundException;
+import fr.pantheonsorbonne.ufr27.miage.exception.PlayerNotFoundException;
 import fr.pantheonsorbonne.ufr27.miage.service.GameCreationService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -28,16 +30,10 @@ public class GameCreationGateway {
     private final ConcurrentHashMap<String, TeamResponseDto> teamResponses = new ConcurrentHashMap<>();
 
     public void handlePlayerRequest(JoinGameRequest body, Exchange exchange) throws Exception {
-        try {
+
             gameService.validateNewRequest(body.playerId());
             gameService.createNewRequest(body.playerId());
             gameService.updateToMatchmaking(body.playerId());
-
-            exchange.getMessage().setBody(body);
-        } catch (DuplicateRequestException e) {
-            exchange.getMessage().setBody(mapper.writeValueAsString(Map.of("error", e.getMessage())));
-            exchange.getMessage().setHeader(Exchange.HTTP_RESPONSE_CODE, 409);
-        }
     }
 
     public void storeTeamAndForwardToQuestions(TeamResponseDto team, Exchange exchange) throws Exception {
@@ -49,7 +45,6 @@ public class GameCreationGateway {
         exchange.getMessage().setHeader("theme", team.theme());
         exchange.getMessage().setHeader("difficulty", team.difficulty());
         exchange.getMessage().setHeader("id", team.id());
-        System.out.println(team.theme() + ' ' + team.difficulty() + ' ' +team.id());
     }
 
     public void combineTeamAndQuestions(List<QuestionDTO> questionsResponse, Exchange exchange) throws Exception {
@@ -70,12 +65,15 @@ public class GameCreationGateway {
         if (team != null) {
             // Combine team and questions data
             Map<String, Object> gameData = Map.of(
-                    "team", team,
+                    "playerIds", team.players(),
+                    "difficulty", team.difficulty(),
+                    "category", team.theme(),
+                    "totalQuestions", questionsResponse.size(),
                     "questions", questionsResponse
             );
 
             exchange.getMessage().setBody(mapper.writeValueAsString(gameData));
-            teamResponses.remove(teamId);
+            team.players().forEach((playerId -> gameService.updateToInGame(playerId)));
         } else {
             exchange.getMessage().setBody(mapper.writeValueAsString(
                     Map.of("error", "Team data not found for ID: " + teamId)
@@ -83,19 +81,45 @@ public class GameCreationGateway {
             exchange.getMessage().setHeader(Exchange.HTTP_RESPONSE_CODE, 404);
         }
     }
+
+    public void handleUpdateToFinished(String teamId, Exchange exchange) throws Exception {
+        TeamResponseDto team = teamResponses.get(teamId);
+        if (team != null) {
+            team.players().forEach((playerId -> gameService.updateToFinished(playerId)));
+            teamResponses.remove(teamId);
+        }
+        else {
+            exchange.getMessage().setBody(mapper.writeValueAsString(
+                    Map.of("error", "Team data not found for ID: " + teamId)
+            ));
+            exchange.getMessage().setHeader(Exchange.HTTP_RESPONSE_CODE, 404);
+        }
+    }
     public void publishJoinRequest(JoinGameRequest request) throws Exception {
-        producerTemplate.sendBody(
-                "direct:CreationPartieService",
-                mapper.writeValueAsString(request)
-        );
+        try {
+            gameService.validateNewRequest(request.playerId());
+            producerTemplate.sendBody(
+                    "direct:CreationPartieService",
+                    mapper.writeValueAsString(request)
+            );
+        } catch (DuplicateRequestException | PlayerNotFoundException e) {
+            throw e;
+        }
     }
 
 
 
     public void publishCancelRequest(long playerId) throws  Exception {
-        producerTemplate.sendBody(
-                    "sjms2:M1.MatchmakingService",
+        try {
+            gameService.validateCancelRequest(playerId);
+            producerTemplate.sendBody(
+                    "sjms2:M1.CancelMatchmakingService",
                     mapper.writeValueAsString(playerId)
             );
-            gameService.cancelRequest(playerId);}
+            gameService.cancelRequest(playerId);
+        } catch (JoinRequestNotFoundException | PlayerNotFoundException e) {
+            throw e;
+        }
+    }
+
 }
