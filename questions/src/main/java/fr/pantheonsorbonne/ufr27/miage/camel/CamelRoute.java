@@ -40,8 +40,8 @@ public class CamelRoute extends RouteBuilder {
                     .handled(true)
                     .to("sjms2:errorQueue")
                     .end()
-                .log("Réponse de la requête : ${body}")
-                .bean(questionServices, "askAPIQuestions")
+                .log("Réponse de la requête : ${headers}")
+//                .bean(questionServices, "askAPIQuestions")
                 .log("Fetching questions for category:ID=${header.id}, ${header.theme}, difficulty: ${header.difficulty}")
                 .process(exchange -> {
                     String id = exchange.getMessage().getHeader("id", String.class);

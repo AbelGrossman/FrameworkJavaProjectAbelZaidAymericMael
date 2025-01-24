@@ -2,14 +2,7 @@ package fr.pantheonsorbonne.ufr27.miage.model;
 
 import java.util.List;
 
-import fr.pantheonsorbonne.ufr27.miage.dto.UserWithMmr;
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "teams")
@@ -24,8 +17,12 @@ public class Team {
     private String theme;
 
     @ElementCollection
+    @CollectionTable(
+        name = "team_players", // Name of the table for the players collection
+        joinColumns = @JoinColumn(name = "team_id") // Foreign key column linking to Team
+    )
     @Column(name = "players", nullable = false)
-    private List<UserWithMmr> players;
+    private List<Long> players;
 
     @Column(name = "difficulty", nullable = false)
     private String difficulty;
@@ -33,7 +30,7 @@ public class Team {
     public Team() {
     }
     
-    public Team(String theme, List<UserWithMmr> players, String difficulty) {
+    public Team(String theme, List<Long> players, String difficulty) {
         this.theme = theme;
         this.players = players;
         this.difficulty = difficulty;
@@ -43,7 +40,7 @@ public class Team {
         return theme;
     }
 
-    public List<UserWithMmr> getPlayers() {
+    public List<Long> getPlayers() {
         return players;
     }
 

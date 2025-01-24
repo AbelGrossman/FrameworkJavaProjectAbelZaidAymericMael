@@ -74,7 +74,7 @@ public class QueueManager {
     @Path("/{theme}/{userId}/{userMmr}/{userTheme}/addPlayerToQueueMapping")
     public Response addPlayerToQueueMapping(@PathParam("userId") Long userId, @PathParam("userMmr") int userMmr, @PathParam("userTheme") String userTheme) {
         UserWithMmr user = new UserWithMmr(userId, userTheme, userMmr);
-        Queue queue = getOrCreateQueue(user.getTheme());
+        Queue queue = getOrCreateQueue(user.theme());
         // synchronized (queue) {
             queue.addPlayer(user);
         // }
@@ -82,7 +82,7 @@ public class QueueManager {
     }
 
     public Response addPlayerToQueue(UserWithMmr user) {
-        Queue queue = getOrCreateQueue(user.getTheme());
+        Queue queue = getOrCreateQueue(user.theme());
         // synchronized (queue) {
             queue.addPlayer(user);
         // }
@@ -96,7 +96,7 @@ public class QueueManager {
     
         // synchronized (queue) {
             List<UserWithMmr> players = queue.getPlayers();
-            players.sort(Comparator.comparingInt(UserWithMmr::getMmr));
+            players.sort(Comparator.comparingInt(UserWithMmr::mmr));
 
             List<List<UserWithMmr>> teams = new ArrayList<>();
             List<UserWithMmr> currentTeam = new ArrayList<>();
@@ -104,7 +104,7 @@ public class QueueManager {
     
             for (UserWithMmr player : players) {
                 if (currentTeam.size()<6 && (currentTeam.isEmpty() || 
-                    player.getMmr() - currentTeam.get(0).getMmr() <= queue.getAllowedMmrDifference())) {
+                    player.mmr() - currentTeam.get(0).mmr() <= queue.getAllowedMmrDifference())) {
                     currentTeam.add(player);
                 } else {
                     if (currentTeam.size() == 6) {
