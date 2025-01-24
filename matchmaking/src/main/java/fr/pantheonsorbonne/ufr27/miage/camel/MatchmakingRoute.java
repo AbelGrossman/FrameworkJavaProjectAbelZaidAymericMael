@@ -30,7 +30,7 @@
          .unmarshal().json(UserWithMmr.class)
          .bean("RankedUserProcessor", "processRankedUser");
 
-         from("direct:newTeam").marshal().json().log("User sent to creation : ${body}").to("sjms2:M1.CreationPartieService");
+         from("direct:newTeam").marshal().json().log("Team sent to creation : ${body}").to("sjms2:M1.CreationPartieService");
 
      }
 

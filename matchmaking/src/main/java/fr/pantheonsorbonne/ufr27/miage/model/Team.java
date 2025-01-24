@@ -2,7 +2,6 @@ package fr.pantheonsorbonne.ufr27.miage.model;
 
 import java.util.List;
 
-import fr.pantheonsorbonne.ufr27.miage.dto.UserWithMmr;
 import jakarta.persistence.*;
 
 @Entity
