@@ -260,35 +260,17 @@ public class GameService {
 
     @Transactional
     public void finishGame(Long gameId) {
-        Game game = gameDAO.findById(gameId).orElseThrow(() -> new RuntimeException("Game not found"));
-        if (game == null) {
-            logger.error("Game with ID {} not found", gameId);
-            throw new RuntimeException("Game not found");
-        }
-        List<Player> players = game.getPlayers();
-        logger.info("Game finished. Final ranks: {}", game.getRanks());
+        Game game = gameDAO.findById(gameId)
+                .orElseThrow(() -> new RuntimeException("Game not found"));
+
         game.setOver(true);
         gameDAO.save(game);
-        saveData(players, gameId);
 
-    }
-
-    @Transactional
-    public void saveData(List<Player> players, Long gameId) {
-        Game game = gameDAO.findById(gameId).orElseThrow(() -> new RuntimeException("Game not found"));
-        if (game == null) {
-            logger.error("Game with ID {} not found", gameId);
-            throw new RuntimeException("Game not found");
-        }
-        for (Player player : players) {
-            if (!gameDAO.playerResultExists(player.getPlayerId(), game.getId())) {
-                savePlayerResult(player.getPlayerId(), game.getId(), player.getScore(), player.getAverageResponseTime(),
-                        0, game.getCategory(), game.getTotalQuestions());
-            }
-        }
         if (scheduler != null) {
             scheduler.shutdown();
         }
+
+        logger.info("Game {} finished successfully", gameId);
     }
 
     public int getPlayerScore(String playerId) {
@@ -307,9 +289,12 @@ public class GameService {
         player.setScore(player.getScore() + 1);
     }
 
+    @Transactional
     public void savePlayerResult(String playerId, Long gameId, int score, long averageResponseTime, int rank,
             String category, int totalQuestions) {
-        gameDAO.savePlayerResults(playerId, gameId, score, averageResponseTime, rank, category, totalQuestions);
+        if (!gameDAO.playerResultExists(playerId, gameId)) {
+            gameDAO.savePlayerResults(playerId, gameId, score, averageResponseTime, rank, category, totalQuestions);
+        }
     }
 
     @Transactional
