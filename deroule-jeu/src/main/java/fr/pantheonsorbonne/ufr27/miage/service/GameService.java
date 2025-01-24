@@ -2,7 +2,6 @@ package fr.pantheonsorbonne.ufr27.miage.service;
 
 import fr.pantheonsorbonne.ufr27.miage.dao.GameDAO;
 import fr.pantheonsorbonne.ufr27.miage.dto.QuestionDTO;
-import fr.pantheonsorbonne.ufr27.miage.dto.PlayerResultsRequest;
 import fr.pantheonsorbonne.ufr27.miage.model.Game;
 import fr.pantheonsorbonne.ufr27.miage.model.Player;
 import fr.pantheonsorbonne.ufr27.miage.model.Question;
@@ -25,12 +24,14 @@ public class GameService {
     private static final int ANSWER_DISPLAY_SECONDS = 10;
 
     private Game currentGame;
+    private Long currentGameId;
     private AtomicInteger currentQuestionIndex = new AtomicInteger(0);
     private ScheduledExecutorService scheduler;
     private ScheduledFuture<?> currentTimer;
     private Map<String, Boolean> playerAnswered = new ConcurrentHashMap<>();
     private long questionStartTime;
     private boolean isShowingAnswer = false;
+    private long gameId;
 
     @Inject
     GameDAO gameDAO;
@@ -39,11 +40,12 @@ public class GameService {
     public Long initializeGame(List<String> playerIds, String category, String difficulty, int totalQuestions,
             List<QuestionDTO> questions) {
         try {
-            logger.info("Initializing game with category: {}, difficulty: {}, totalQuestions: {}",
-                    category, difficulty, totalQuestions);
+            logger.info("Initializing game with category: {}, difficulty: {}, totalQuestions: {}", category, difficulty,
+                    totalQuestions);
             logger.info("Player IDs: {}", playerIds);
             logger.info("Questions size: {}", questions.size());
 
+            // Validate inputs
             if (playerIds == null || playerIds.size() != 6) {
                 throw new IllegalArgumentException("Game must have exactly 6 players.");
             }
@@ -56,6 +58,7 @@ public class GameService {
                 throw new IllegalArgumentException("Number of questions does not match totalQuestions.");
             }
 
+            // Create players and questions
             List<Player> players = retrievePlayers(playerIds);
             logger.info("Created players: {}", players.size());
 
@@ -65,21 +68,31 @@ public class GameService {
                     .collect(Collectors.toList());
             logger.info("Mapped questions: {}", questionEntities.size());
 
+            // Initialize game
             currentGame = new Game(category, difficulty, players, totalQuestions, questionEntities);
             logger.info("Game created, saving to database...");
 
             gameDAO.save(currentGame);
-            logger.info("Game saved with ID: {}", currentGame.getId());
+            currentGameId = currentGame.getId();
+            gameId = currentGameId;
+            logger.info("Game saved with ID: {}", currentGameId);
 
+            // Initialize game state
+            currentQuestionIndex.set(0);
             scheduler = Executors.newSingleThreadScheduledExecutor();
             resetPlayerAnsweredStatus();
+            questionStartTime = System.currentTimeMillis();
             startQuestionTimer();
 
-            return currentGame.getId();
+            return currentGameId;
         } catch (Exception e) {
             logger.error("Error initializing game:", e);
             throw e;
         }
+    }
+
+    public long getCurrentGameId() {
+        return gameId;
     }
 
     private List<Player> retrievePlayers(List<String> playerIds) {
@@ -183,7 +196,7 @@ public class GameService {
         if (nextIndex < currentGame.getTotalQuestions()) {
             startQuestionTimer();
         } else {
-            finishGame();
+            finishGame(currentGameId);
         }
     }
 
@@ -234,47 +247,25 @@ public class GameService {
                 .anyMatch(player -> player.getPlayerId().equals(playerId));
     }
 
-    public void finishGame() {
-        if (currentGame == null) {
-            logger.error("Game not initialized");
-            throw new RuntimeException("Game not initialized");
+    public void finishGame(Long gameId) {
+        Game game = gameDAO.findById(gameId).orElseThrow(() -> new RuntimeException("Game not found"));
+        if (game == null) {
+            logger.error("Game with ID {} not found", gameId);
+            throw new RuntimeException("Game not found");
         }
+        List<Player> players = game.getPlayers();
+        logger.info("Game finished. Final ranks: {}", game.getRanks());
+        game.setOver(true);
+        gameDAO.save(game);
 
-        List<Player> players = currentGame.getPlayers();
-        players.sort((p1, p2) -> Integer.compare(p2.getScore(), p1.getScore()));
-
-        List<Integer> ranks = currentGame.getRanks();
-        for (int i = 0; i < players.size(); i++) {
-            ranks.set(i, i + 1);
-        }
-
-        logger.info("Game finished. Final ranks: {}", currentGame.getRanks());
-
-        // Save the game to the database
-        gameDAO.save(currentGame);
-
-        // Save player results to another microservice
         for (Player player : players) {
-            PlayerResultsRequest playerResultsRequest = new PlayerResultsRequest(
-                    player.getPlayerId(),
-                    player.getScore(),
-                    "1.1s", // Placeholder for average response time
-                    currentGame.getQuestions().get(0).getCategory(),
-                    currentGame.getTotalQuestions(),
-                    ranks.get(players.indexOf(player)));
-
-            // Send player results to another microservice
-            sendPlayerResults(playerResultsRequest);
+            savePlayerResult(player.getPlayerId(), game.getId(), player.getScore(), player.getAverageResponseTime(), 0, game.getCategory(), game.getTotalQuestions());
         }
 
         // Cleanup
         if (scheduler != null) {
             scheduler.shutdown();
         }
-    }
-
-    private void sendPlayerResults(PlayerResultsRequest playerResultsRequest) {
-        logger.info("Sending player results: {}", playerResultsRequest);
     }
 
     public int getPlayerScore(String playerId) {
@@ -293,4 +284,7 @@ public class GameService {
         player.setScore(player.getScore() + 1);
     }
 
+    public void savePlayerResult(String playerId, Long gameId, int score, long averageResponseTime, int rank, String category, int totalQuestions) {
+        gameDAO.savePlayerResults(playerId, gameId, score, averageResponseTime, rank, category, totalQuestions);
+    }
 }

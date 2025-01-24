@@ -5,6 +5,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.inject.Inject;
 import fr.pantheonsorbonne.ufr27.miage.service.GameService;
 import fr.pantheonsorbonne.ufr27.miage.dto.GameInitializationRequest;
+import fr.pantheonsorbonne.ufr27.miage.dto.PlayerResultsRequest;
 import fr.pantheonsorbonne.ufr27.miage.dto.QuestionDTO;
 import fr.pantheonsorbonne.ufr27.miage.dto.AnswerRequest;
 import jakarta.ws.rs.core.MediaType;
@@ -41,6 +42,22 @@ public class GameResource {
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity(Map.of("error", "Failed to initialize game")).build();
+        }
+    }
+
+    @GET
+    @Path("/currentGameID")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Get the current game ID")
+    @APIResponse(responseCode = "200", description = "Current game ID retrieved successfully")
+    public Response getCurrentGameID(@QueryParam("playerId") String playerId) {
+        try {
+            Long gameId = gameService.getCurrentGameId();
+            return Response.ok(Map.of("gameId", gameId)).build();
+        } catch (RuntimeException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", e.getMessage()))
+                    .build();
         }
     }
 
@@ -116,9 +133,9 @@ public class GameResource {
     @Path("/finish")
     @Operation(summary = "Finish the game")
     @APIResponse(responseCode = "200", description = "Game finished successfully")
-    public Response finishGame() {
+    public Response finishGame(@QueryParam("gameId") Long gameId) {
         try {
-            gameService.finishGame();
+            gameService.finishGame(gameId);
             return Response.ok()
                     .entity(Map.of(
                             "message", "Game finished successfully",
@@ -129,5 +146,24 @@ public class GameResource {
                     .entity(Map.of("error", e.getMessage()))
                     .build();
         }
+    }
+
+
+    @POST
+    @Path("/createPlayerResult")
+    @Operation(summary = "Create player result")
+    @APIResponse(responseCode = "201", description = "Player result created successfully")
+    public Response createPlayerResult(@RequestBody PlayerResultsRequest request) {
+        try {
+            gameService.savePlayerResult(request.playerId(), request.gameId(), request.score(), request.averageResponseTime(), 0 , request.category(), request.totalQuestions());
+            return Response.status(Response.Status.CREATED)
+                    .entity(Map.of("message", "Player result created successfully"))
+                    .build();
+        } catch (RuntimeException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", e.getMessage()))
+                    .build();
+        }
+       
     }
 }

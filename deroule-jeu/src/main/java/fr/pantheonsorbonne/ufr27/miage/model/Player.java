@@ -10,6 +10,7 @@ public class Player {
     private String playerId;
     private String name;
     private int score;
+    private long averageResponseTime;
 
     public Player() {
         // Default constructor
@@ -19,6 +20,7 @@ public class Player {
         this.playerId = playerId;
         this.name = name;
         this.score = 0;
+        this.averageResponseTime = 0;
     }
 
     // Getters and Setters
@@ -53,5 +55,13 @@ public class Player {
 
     public void setScore(int score) {
         this.score = score;
+    }
+
+    public long getAverageResponseTime() {
+        return averageResponseTime;
+    }
+
+    public void setAverageResponseTime(long averageResponseTime) {
+        this.averageResponseTime = averageResponseTime;
     }
 }

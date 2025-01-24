@@ -22,6 +22,9 @@ public class Game {
     @ElementCollection
     private List<Integer> ranks;
 
+    @Column(columnDefinition = "boolean default false")
+    private boolean isOver = false;
+
     public Game() {
         // Default constructor
     }
@@ -100,5 +103,13 @@ public class Game {
             return questions.get(index);
         }
         return null;
+    }
+
+    public boolean isOver() {
+        return isOver;
+    }
+
+    public void setOver(boolean over) {
+        isOver = over;
     }
 }

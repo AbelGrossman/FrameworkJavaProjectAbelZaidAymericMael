@@ -1,16 +1,16 @@
 package fr.pantheonsorbonne.ufr27.miage.dao;
 
 import fr.pantheonsorbonne.ufr27.miage.model.Game;
-// import fr.pantheonsorbonne.ufr27.miage.model.PlayerResult;
+import fr.pantheonsorbonne.ufr27.miage.model.PlayerResult;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
+
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-//import java.util.List;
-//import java.util.Optional;
 
 @ApplicationScoped
 public class GameDAOImpl implements GameDAO {
@@ -24,7 +24,11 @@ public class GameDAOImpl implements GameDAO {
     @Transactional
     public void save(Game game) {
         try {
-            entityManager.persist(game);
+            if (game.getId() == null) {
+                entityManager.persist(game);
+            } else {
+                entityManager.merge(game);
+            }
             entityManager.flush(); // Force flush to see any errors
             logger.info("Game saved with ID: {}", game.getId());
         } catch (Exception e) {
@@ -33,52 +37,22 @@ public class GameDAOImpl implements GameDAO {
         }
     }
 
-    // @Override
-    // public Optional<Game> findById(Long id) {
-    // Game game = entityManager.find(Game.class, id);
-    // return Optional.ofNullable(game);
-    // }
+    @Override
+    public Optional<Game> findById(Long id) {
+        Game game = entityManager.find(Game.class, id);
+        return game == null ? Optional.empty() : Optional.of(game);
+    }
 
-    // @Override
-    // @Transactional
-    // public void update(Game game) {
-    // entityManager.merge(game);
-    // logger.info("Game updated with ID: {}", game.getId());
-    // }
-
-    // @Override
-    // @Transactional
-    // public void delete(Long id) {
-    // Game game = entityManager.find(Game.class, id);
-    // if (game != null) {
-    // entityManager.remove(game);
-    // logger.info("Game deleted with ID: {}", id);
-    // }
-    // }
-
-    // @Override
-    // public Optional<Game> findByTheme(String theme) {
-    // List<Game> games = entityManager.createQuery("SELECT g FROM Game g WHERE
-    // g.theme = :theme", Game.class)
-    // .setParameter("theme", theme)
-    // .getResultList();
-    // return games.isEmpty() ? Optional.empty() : Optional.of(games.get(0));
-    // }
-
-    // @Override
-    // public List<Game> findAll() {
-    // return entityManager.createQuery("SELECT g FROM Game g",
-    // Game.class).getResultList();
-    // }
-
-    // @Override
-    // @Transactional
-    // public void savePlayerResults(String playerId, String gameId, int score, long
-    // averageResponseTime) {
-    // PlayerResult playerResult = new PlayerResult(playerId, gameId, score,
-    // averageResponseTime);
-    // entityManager.persist(playerResult);
-    // logger.info("Player results saved for player ID: {} in game ID: {}",
-    // playerId, gameId);
-    // }
+    @Override
+    @Transactional
+    public void savePlayerResults(String playerId, long gameId, int score, long averageResponseTime, int rank, String category, int totalQuestions) {
+        try {
+            PlayerResult playerResult = new PlayerResult(playerId, gameId, score, averageResponseTime, rank, category, totalQuestions);
+            entityManager.persist(playerResult);
+            logger.info("Player results saved for player: {} in game: {}", playerId, gameId);
+        } catch (Exception e) {
+            logger.error("Error saving player results: ", e);
+            throw e;
+        }
+    }
 }

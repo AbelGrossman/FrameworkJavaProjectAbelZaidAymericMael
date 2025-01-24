@@ -14,7 +14,7 @@ public class PlayerResult {
     private String playerId;
 
     @Column(name = "game_id")
-    private String gameId;
+    private long gameId;
 
     @Column(name = "score")
     private int score;
@@ -22,15 +22,27 @@ public class PlayerResult {
     @Column(name = "average_response_time")
     private long averageResponseTime;
 
+    @Column(name = "rank")
+    private int rank = 0;
+
+    @Column(name = "category")
+    private String category;
+
+    @Column(name = "total_questions")
+    private int totalQuestions; 
+
     // Constructors
     public PlayerResult() {
     }
 
-    public PlayerResult(String playerId, String gameId, int score, long averageResponseTime) {
+    public PlayerResult(String playerId, long gameId, int score, long averageResponseTime, int rank, String category, int totalQuestions) {
         this.playerId = playerId;
         this.gameId = gameId;
         this.score = score;
         this.averageResponseTime = averageResponseTime;
+        this.rank = rank;
+        this.category = category;
+        this.totalQuestions = totalQuestions;
     }
 
     // Getters and Setters
@@ -50,11 +62,11 @@ public class PlayerResult {
         this.playerId = playerId;
     }
 
-    public String getGameId() {
+    public long getGameId() {
         return gameId;
     }
 
-    public void setGameId(String gameId) {
+    public void setGameId(long gameId) {
         this.gameId = gameId;
     }
 
@@ -73,4 +85,29 @@ public class PlayerResult {
     public void setAverageResponseTime(long averageResponseTime) {
         this.averageResponseTime = averageResponseTime;
     }
+
+    public int getRank() {
+        return rank;
+    }
+
+    public void setRank(int rank) {
+        this.rank = rank;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public int getTotalQuestions() {
+        return totalQuestions;
+    }
+
+    public void setTotalQuestions(int totalQuestions) {
+        this.totalQuestions = totalQuestions;
+    }
+
 }
