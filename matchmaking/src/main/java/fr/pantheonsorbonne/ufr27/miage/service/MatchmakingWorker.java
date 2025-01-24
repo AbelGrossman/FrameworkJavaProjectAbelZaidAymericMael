@@ -12,17 +12,15 @@ public class MatchmakingWorker {
         this.queueManager = queueManager;
     }
 
-    @Scheduled(every = "5s") // Runs every 5 seconds
+    @Scheduled(every = "5s")
     public void processQueues() {
-        // Loop through all themes managed by the QueueManager
         for (String theme : queueManager.getThemes()) {
-            queueManager.formTeams(theme); // Process each theme's queue to form teams
+            queueManager.formTeams(theme);
         }
     }
 
-    @Scheduled(every = "5s") // Runs every  seconds
+    @Scheduled(every = "5s") 
     public void adjustMmr() {
-        // Loop through all themes managed by the QueueManager
-            queueManager.adjustMmrDifferencePeriodically(); // Adjust each theme's players' MMR
+            queueManager.adjustMmrDifferencePeriodically(); 
     }
 }
