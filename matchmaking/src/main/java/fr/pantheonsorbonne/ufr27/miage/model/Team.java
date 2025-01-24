@@ -17,6 +17,10 @@ public class Team {
     private String theme;
 
     @ElementCollection
+    @CollectionTable(
+        name = "team_players", // Name of the table for the players collection
+        joinColumns = @JoinColumn(name = "team_id") // Foreign key column linking to Team
+    )
     @Column(name = "players", nullable = false)
     private List<Long> players;
 
