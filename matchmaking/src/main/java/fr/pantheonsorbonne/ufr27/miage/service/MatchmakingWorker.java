@@ -6,9 +6,9 @@ import io.quarkus.scheduler.Scheduled;
 @ApplicationScoped
 public class MatchmakingWorker {
 
-    private final QueueManager queueManager;
+    private final QueueManagerImpl queueManager;
 
-    public MatchmakingWorker(QueueManager queueManager) {
+    public MatchmakingWorker(QueueManagerImpl queueManager) {
         this.queueManager = queueManager;
     }
 

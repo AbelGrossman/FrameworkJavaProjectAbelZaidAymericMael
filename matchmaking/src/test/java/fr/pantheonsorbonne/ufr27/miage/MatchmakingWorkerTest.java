@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import fr.pantheonsorbonne.ufr27.miage.service.MatchmakingWorker;
-import fr.pantheonsorbonne.ufr27.miage.service.QueueManager;
+import fr.pantheonsorbonne.ufr27.miage.service.QueueManagerImpl;
 
 import java.util.List;
 
@@ -14,11 +14,11 @@ import static org.mockito.Mockito.*;
 class MatchmakingWorkerTest {
 
     private MatchmakingWorker matchmakingWorker;
-    private QueueManager mockQueueManager;
+    private QueueManagerImpl mockQueueManager;
 
     @BeforeEach
     void setUp() {
-        mockQueueManager = Mockito.mock(QueueManager.class);
+        mockQueueManager = Mockito.mock(QueueManagerImpl.class);
         matchmakingWorker = new MatchmakingWorker(mockQueueManager);
     }
 
