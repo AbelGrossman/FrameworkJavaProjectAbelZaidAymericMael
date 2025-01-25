@@ -1,6 +1,9 @@
 package fr.pantheonsorbonne.ufr27.miage.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.pantheonsorbonne.ufr27.miage.dao.StatistiquesDAO;
+import fr.pantheonsorbonne.ufr27.miage.dto.PartieDetails;
 import fr.pantheonsorbonne.ufr27.miage.model.StatistiquesJoueur;
 import fr.pantheonsorbonne.ufr27.miage.model.StatistiquesParTheme;
 
@@ -13,14 +16,31 @@ public class StatistiquesServiceImpl implements StatistiquesService {
     @Inject
     StatistiquesDAO statistiquesDAO;
 
+    @Inject
+    ObjectMapper objectMapper;
+
+    public void processAndUpdateStatistiques(String jsonInput) throws JsonProcessingException {
+        PartieDetails[] partieDetailsArray = objectMapper.readValue(jsonInput, PartieDetails[].class);
+        for (PartieDetails partieDetails : partieDetailsArray) {
+            updateStatistiques(
+                    partieDetails.getPlayerId(),
+                    partieDetails.getRangPartie(),
+                    partieDetails.getScorePartie(),
+                    partieDetails.getNbQuestions(),
+                    partieDetails.getTheme(),
+                    partieDetails.getTempsRepMoyen()
+            );
+        }
+    }
+
     @Override
-    public void updateStatistiques(Long playerId, int rangPartie, int scorePartie, int nbQuestions, String theme, double tempsRepMoyen) {
-        // Récupération des statistiques actuelles
+    public void updateStatistiques(Long playerId, int rangPartie, int scorePartie, int nbQuestions, String theme, long tempsRepMoyen) {
+
         StatistiquesJoueur statsJoueur = statistiquesDAO.getStatistiquesJoueur(playerId);
 
         int nbVictoires = (rangPartie == 1) ? 1 : 0;
         double scoreMoyen = ((double) scorePartie /nbQuestions)*10;
-        double nouveauTempsRepMoyen = tempsRepMoyen;
+        long nouveauTempsRepMoyen = tempsRepMoyen;
         int newNbPartie = 1;
         // Calcul du MMR
         int mmr = calculateMMR(rangPartie);
@@ -30,13 +50,12 @@ public class StatistiquesServiceImpl implements StatistiquesService {
                 newNbPartie = statsJoueur.getNbPartie() + 1;
                 nbVictoires += statsJoueur.getNbVictoires();
                 scoreMoyen = ((statsJoueur.getScoreMoyen() * statsJoueur.getNbPartie()) + scoreMoyen) / newNbPartie;
-                ;
-                nouveauTempsRepMoyen = (statsJoueur.getTempsRepMoyen() + tempsRepMoyen) / 2.0;
+                nouveauTempsRepMoyen = (long) ((statsJoueur.getTempsRepMoyen() + tempsRepMoyen) / 2.0);
                 mmr += statsJoueur.getMmr();
             }
         }
 
-        // Mise à jour des statistiques globales
+
         statistiquesDAO.createOrUpdateStatistiquesJoueur(
                 playerId,
                 nbVictoires,
@@ -46,7 +65,6 @@ public class StatistiquesServiceImpl implements StatistiquesService {
                 newNbPartie
         );
 
-        // Mise à jour des statistiques par thème
         statistiquesDAO.createOrUpdateStatistiquesParTheme(
                 playerId,
                 theme,
@@ -67,7 +85,7 @@ public class StatistiquesServiceImpl implements StatistiquesService {
         int initialNbVictoires = 0;
         int initialMMR = 0;
         double initialScoreMoyen = 0.0;
-        double initialTempsRepMoyen = 0.0;
+        long initialTempsRepMoyen = 0;
         int initialNbPartie = 0;
         if (existingStats == null) {
 
@@ -122,4 +140,16 @@ public class StatistiquesServiceImpl implements StatistiquesService {
     public StatistiquesParTheme getStatistiquesParTheme(Long playerId, String theme) {
         return statistiquesDAO.getStatistiquesParTheme(playerId, theme);
     }
+
+    public Long convertPlayerId(String player_id) {
+        if (player_id == null || player_id.isEmpty()) {
+            throw new IllegalArgumentException("Le player_id ne peut pas être null ou vide");
+        }
+        try {
+            return Long.valueOf(player_id);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Le player_id n'est pas un nombre valide : " + player_id, e);
+        }
+    }
+
 }

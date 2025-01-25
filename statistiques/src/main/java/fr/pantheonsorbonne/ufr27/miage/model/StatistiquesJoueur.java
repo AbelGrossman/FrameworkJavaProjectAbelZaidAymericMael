@@ -27,7 +27,7 @@ public class StatistiquesJoueur {
     private Double scoreMoyen;
 
     @Column(name = "tempsRepMoyen", nullable = false)
-    private Double tempsRepMoyen;
+    private long tempsRepMoyen;
 
     // Getters and Setters
     public Integer getId() { return id;}
@@ -56,11 +56,11 @@ public class StatistiquesJoueur {
         this.nbPartie = nbPartie;
     }
 
-    public Double getTempsRepMoyen() {
+    public long getTempsRepMoyen() {
         return tempsRepMoyen;
     }
 
-    public void setTempsRepMoyen(Double tempsRepMoyen) {
+    public void setTempsRepMoyen(long tempsRepMoyen) {
         this.tempsRepMoyen = tempsRepMoyen;
     }
     public Integer getMmr() {
