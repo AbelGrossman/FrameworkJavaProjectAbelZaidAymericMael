@@ -31,7 +31,6 @@ public class PlayerResult {
     @Column(name = "total_questions")
     private int totalQuestions; 
 
-    // Constructors
     public PlayerResult() {
     }
 
@@ -45,7 +44,6 @@ public class PlayerResult {
         this.totalQuestions = totalQuestions;
     }
 
-    // Getters and Setters
     public Long getId() {
         return id;
     }

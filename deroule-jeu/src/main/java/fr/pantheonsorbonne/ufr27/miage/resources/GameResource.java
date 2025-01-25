@@ -28,14 +28,20 @@ public class GameResource {
     @Path("/initialize")
     @Operation(summary = "Initialize the game")
     @APIResponse(responseCode = "201", description = "Game initialized successfully")
-    public Response initializeGame(@RequestBody GameInitializationRequest request) {
+    public Response initializeGame(@RequestBody GameInitializationRequest request,
+            @HeaderParam("teamId") String teamId) {
         try {
+            if (teamId == null) {
+                return Response.status(Response.Status.BAD_REQUEST).entity(Map.of("error", "teamId header is required"))
+                        .build();
+            }
             Long gameId = gameService.initializeGame(
                     request.playerIds(),
                     request.category(),
                     request.difficulty(),
                     request.totalQuestions(),
-                    request.questions());
+                    request.questions(),
+                     teamId);
             return Response.status(Response.Status.CREATED).entity(Map.of("gameId", gameId)).build();
         } catch (IllegalArgumentException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(Map.of("error", e.getMessage())).build();
@@ -174,6 +180,7 @@ public class GameResource {
     public Response getGameRankings(@PathParam("gameId") Long gameId) {
         try {
             Map<String, Integer> rankings = gameService.getGameRankings(gameId);
+            gameService.sendToGameCompletionGateway(gameId);
             return Response.ok(rankings).build();
         } catch (RuntimeException e) {
             return Response.status(Response.Status.BAD_REQUEST)

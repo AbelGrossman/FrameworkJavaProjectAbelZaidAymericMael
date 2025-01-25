@@ -25,21 +25,22 @@ public class Game {
     @Column(columnDefinition = "boolean default false")
     private boolean isOver = false;
 
+    private String teamId;
+
     public Game() {
-        // Default constructor
     }
 
     public Game(String category, String difficulty, List<Player> players, int totalQuestions,
-            List<Question> questions) {
+            List<Question> questions, String teamId) {
         this.category = category;
         this.difficulty = difficulty;
         this.players = players;
         this.totalQuestions = totalQuestions;
         this.questions = questions;
         this.ranks = List.of(0, 0, 0, 0, 0, 0);
+        this.teamId = teamId;
     }
 
-    // Existing getters and setters for players
     public List<Player> getPlayers() {
         return players;
     }
@@ -48,7 +49,6 @@ public class Game {
         this.players = players;
     }
 
-    // New getters and setters
     public Long getId() {
         return id;
     }
@@ -73,7 +73,6 @@ public class Game {
         this.difficulty = difficulty;
     }
 
-    // Existing getters and setters
     public int getTotalQuestions() {
         return totalQuestions;
     }
@@ -111,5 +110,13 @@ public class Game {
 
     public void setOver(boolean over) {
         isOver = over;
+    }
+
+    public String getTeamId() {
+        return teamId;
+    }
+
+    public void setTeamId(String teamId) {
+        this.teamId = teamId;
     }
 }

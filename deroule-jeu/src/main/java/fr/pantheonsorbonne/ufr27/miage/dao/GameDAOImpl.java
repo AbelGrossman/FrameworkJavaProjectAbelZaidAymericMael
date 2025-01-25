@@ -30,7 +30,7 @@ public class GameDAOImpl implements GameDAO {
             } else {
                 entityManager.merge(game);
             }
-            entityManager.flush(); // Force flush to see any errors
+            entityManager.flush();
             logger.info("Game saved with ID: {}", game.getId());
         } catch (Exception e) {
             logger.error("Error saving game: ", e);

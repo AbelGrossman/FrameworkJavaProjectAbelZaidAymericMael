@@ -18,7 +18,6 @@ public class Question {
     private List<String> incorrect_answers;
 
     public Question() {
-        // Default constructor
     }
 
     public Question(String type, String difficulty, String category, String question, String correct_answer, List<String> incorrect_answers) {
@@ -29,8 +28,6 @@ public class Question {
         this.correct_answer = correct_answer;
         this.incorrect_answers = incorrect_answers;
     }
-
-    // Getters and Setters
 
     public Long getId() {
         return id;
