@@ -30,7 +30,7 @@ public class StatistiquesDAOImpl implements StatistiquesDAO {
     @Override
     @Transactional
     public StatistiquesJoueur createOrUpdateStatistiquesJoueur(
-            Long playerId, int nbVictoire, int mmr, double scoreMoyen, double tempsRepMoyen, int nbPartie) {
+            Long playerId, int nbVictoire, int mmr, double scoreMoyen, long tempsRepMoyen, int nbPartie) {
         StatistiquesJoueur stats = getStatistiquesJoueur(playerId);
 
         if (stats == null) {
@@ -72,7 +72,7 @@ public class StatistiquesDAOImpl implements StatistiquesDAO {
     @Override
     @Transactional
     public StatistiquesParTheme createOrUpdateStatistiquesParTheme(
-            Long playerId, String theme, int nbVictoire, int mmr, double scoreMoyen, double tempsRepMoyen, int nbPartie) {
+            Long playerId, String theme, int nbVictoire, int mmr, double scoreMoyen, long tempsRepMoyen, int nbPartie) {
         StatistiquesParTheme stats = getStatistiquesParTheme(playerId, theme);
 
         if (stats == null) {

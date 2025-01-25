@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Game</title>
+    <style>
+        .question-container {
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .answer-button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            cursor: pointer;
+        }
+
+        .answer-button:hover:not(:disabled) {
+            background-color: #e9ecef;
+        }
+
+        .answer-button:disabled {
+            cursor: not-allowed;
+        }
+
+        .correct-answer {
+            background-color: #28a745 !important;
+            color: white !important;
+        }
+
+        .incorrect-answer {
+            background-color: #dc3545 !important;
+            color: white !important;
+        }
+
+        #timer {
+            font-size: 1.5em;
+            margin: 10px;
+            text-align: center;
+        }
+
+        .timer-question {
+            color: #dc3545;
+        }
+
+        .timer-answer {
+            color: #28a745;
+        }
+
+        .answer-reveal {
+            background-color: #28a745;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+            font-size: 1.2em;
+        }
+
+        .timer-warning {
+            animation: blink 1s linear infinite;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            border: 1px solid #ddd;
+        }
+
+        .leaderboard-table th,
+        .leaderboard-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .leaderboard-table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+
+        .current-player-row {
+            background-color: #e3f2fd;
+            font-weight: bold;
+        }
+
+        .leaderboard-header {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+    <h1 id="game-title">Quiz Game</h1>
+    <div id="timer"></div>
+    <div id="score">Score: 0</div>
+    <div id="average-time">Average Response Time: 0ms</div>
+    <div id="questions"></div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const playerId = urlParams.get('playerId');
+        let gameId = null;
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let questions = [];
+        let answerSubmitted = false;
+        let gameStateInterval;
+        let lastSubmittedAnswer = '';
+        let questionDisplayTime;
+        let totalResponseTime = 0;
+        let questionCount = 0;
+
+        function initializeGame() {
+            const playerId = urlParams.get('playerId');
+
+            fetch(`/game/state?playerId=${playerId}`)
+                .then(response => response.json())
+                .then(data => {
+                    fetchQuestions();
+                })
+                .catch(error => console.error('Error initializing game:', error));
+        }
+
+        function getGameId() {
+            fetch(`/game/currentGameID`)
+                .then(response => response.json())
+                .then(data => {
+                    gameId = data.gameId;
+                    console.log('Game ID received:', gameId);
+                    localStorage.setItem('gameId', gameId);
+                    document.getElementById('game-title').innerText = `Quiz Game ${gameId}`;
+                    fetchQuestions();
+                })
+                .catch(error => console.error('Error initializing game:', error));
+        }
+
+        function updateGameState() {
+            fetch(`/game/state?playerId=${playerId}`)
+                .then(response => response.json())
+                .then(gameState => {
+                    const remainingTime = Math.ceil(gameState.remainingTime / 1000);
+
+                    const timerElement = document.getElementById('timer');
+                    if (gameState.isShowingAnswer) {
+                        timerElement.innerText = `Showing answer: ${remainingTime}s`;
+                        timerElement.className = 'timer-answer';
+                    } else {
+                        timerElement.innerText = `Time remaining: ${remainingTime}s`;
+                        timerElement.className = 'timer-question';
+                        if (remainingTime <= 5) {
+                            timerElement.classList.add('timer-warning');
+                        }
+                    }
+
+                    if (gameState.isShowingAnswer) {
+                        showCorrectAnswer(gameState.correctAnswer);
+                    }
+
+                    if (gameState.currentQuestionIndex !== currentQuestionIndex) {
+                        currentQuestionIndex = gameState.currentQuestionIndex;
+                        lastSubmittedAnswer = '';
+                        displayCurrentQuestion();
+                    }
+
+                    if (gameState.hasAnswered && !answerSubmitted) {
+                        disableAnswerButtons();
+                    }
+                })
+                .catch(error => console.error('Error updating game state:', error));
+        }
+
+        function startGameStatePolling() {
+            gameStateInterval = setInterval(updateGameState, 1000);
+        }
+
+        function fetchQuestions() {
+            fetch(`/game/fetchQuestions?playerId=${playerId}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to fetch questions');
+                    return response.json();
+                })
+                .then(data => {
+                    questions = data;
+                    displayCurrentQuestion();
+                    startGameStatePolling();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(error.message);
+                });
+        }
+
+        function showCorrectAnswer(correctAnswer) {
+            const buttons = document.querySelectorAll('.answer-button');
+            buttons.forEach(button => {
+                button.disabled = true;
+                if (button.innerText === correctAnswer) {
+                    button.classList.add('correct-answer');
+                } else if (button.innerText === lastSubmittedAnswer && lastSubmittedAnswer !== correctAnswer) {
+                    button.classList.add('incorrect-answer');
+                }
+            });
+
+            const answerRevealDiv = document.getElementById('answer-reveal');
+            if (!answerRevealDiv) {
+                const revealDiv = document.createElement('div');
+                revealDiv.id = 'answer-reveal';
+                revealDiv.className = 'answer-reveal';
+                revealDiv.innerText = `The correct answer is: ${correctAnswer}`;
+                document.getElementById('questions').insertBefore(revealDiv, document.getElementById('questions').firstChild);
+            }
+        }
+
+        function displayCurrentQuestion() {
+            questionDisplayTime = Date.now();
+            const questionsDiv = document.getElementById('questions');
+            questionsDiv.innerHTML = '';
+            answerSubmitted = false;
+
+            if (currentQuestionIndex < questions.length) {
+                const question = questions[currentQuestionIndex];
+                const allAnswers = [...question.incorrect_answers, question.correct_answer];
+                const shuffledAnswers = allAnswers.sort(() => Math.random() - 0.5);
+
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container';
+                questionDiv.innerHTML = `
+                <h3>Question ${currentQuestionIndex + 1} of ${questions.length}</h3>
+                <p>${question.question}</p>
+                <div>
+                    ${shuffledAnswers.map(answer => `
+                        <button class="answer-button" onclick="submitAnswer('${answer.replace(/'/g, "\\'")}')"
+                                ${answerSubmitted ? 'disabled' : ''}>
+                            ${answer}
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+                questionsDiv.appendChild(questionDiv);
+            } else {
+                questionsDiv.innerHTML = `
+                <div class="question-container">
+                    <h3>Game completed!</h3>
+                    <p>Final score: ${score}</p>
+                    <p>Average response time: ${Math.round(totalResponseTime / questionCount)}ms</p>
+                    <div id="final-results">Loading final results...</div>
+                </div>`;
+                clearInterval(gameStateInterval);
+                finishGame();
+            }
+        }
+
+        function disableAnswerButtons() {
+            document.querySelectorAll('.answer-button').forEach(button => {
+                button.disabled = true;
+            });
+        }
+
+        function submitAnswer(answer) {
+            if (answerSubmitted) return;
+            const responseTime = Date.now() - questionDisplayTime;
+            totalResponseTime += responseTime;
+            questionCount++;
+            const averageTime = Math.round(totalResponseTime / questionCount);
+            document.getElementById('average-time').innerText = `Average Response Time: ${averageTime}ms`;
+
+            answerSubmitted = true;
+            lastSubmittedAnswer = answer;
+
+            fetch('/game/submitAnswer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    playerId: playerId,
+                    answer: answer,
+                    startTime: questionDisplayTime,
+                    responseTime: responseTime
+                })
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to submit answer');
+                    return response.json();
+                })
+                .then(data => {
+                    score = data.score;
+                    document.getElementById('score').innerText = `Score: ${score}`;
+                    disableAnswerButtons();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error submitting answer. Please try again.');
+                    answerSubmitted = false;
+                    lastSubmittedAnswer = '';
+                });
+        }
+
+        function finishGame() {
+            if (!gameId) {
+                console.error('No gameId available');
+                return;
+            }
+
+            const playerResult = {
+                playerId: playerId,
+                gameId: gameId,
+                score: score,
+                averageResponseTime: Math.round(totalResponseTime / questionCount),
+                category: questions[0].category,
+                totalQuestions: questions.length,
+                rank: 0
+            };
+
+            fetch('/game/createPlayerResult', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(playerResult)
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to save player results');
+                    return fetch(`/game/finish?gameId=${gameId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const questionsDiv = document.getElementById('questions');
+                    questionsDiv.innerHTML = `
+            <div class="question-container">
+                <h3>Game completed!</h3>
+                <p>Final score: ${score}</p>
+                <p>Final average response time: ${Math.round(totalResponseTime / questionCount)}ms</p>
+                <div id="leaderboard">Loading leaderboard...</div>
+            </div>`;
+
+                    // Wait 20s then fetch and display rankings
+                    setTimeout(() => {
+                        fetch(`/game/rankings/${gameId}`)
+                            .then(response => response.json())
+                            .then(rankings => {
+                                const leaderboardDiv = document.getElementById('leaderboard');
+                                const leaderboardHtml = `
+                        <h3 class="leaderboard-header">Final Rankings</h3>
+                        <table class="leaderboard-table">
+                            <tr>
+                                <th>Rank</th>
+                                <th>Player</th>
+                                <th>Status</th>
+                            </tr>
+                            ${Object.entries(rankings)
+                                        .sort((a, b) => a[1] - b[1])
+                                        .map(([pid, rank]) => `
+                                    <tr class="${pid === playerId ? 'current-player-row' : ''} ${rank <= 3 ? 'rank-' + rank : ''}">
+                                        <td>#${rank}</td>
+                                        <td>Player ${pid}</td>
+                                        <td>${pid === playerId ? 'YOU' : ''}</td>
+                                    </tr>`
+                                        ).join('')}
+                        </table>
+                        <br>
+                        <button onclick="window.location.href='/'" class="answer-button">Return to Home</button>
+                    `;
+                                leaderboardDiv.innerHTML = leaderboardHtml;
+                            });
+                    }, 15000);
+
+                    clearInterval(gameStateInterval);
+                })
+                .catch(error => {
+                    console.error('Error finishing game:', error);
+                    alert('Failed to finish game. Error: ' + error.message);
+                });
+        }
+
+        // Start the game by initializing it
+        initializeGame();
+        getGameId();
+    </script>
+</body>
+
+</html>

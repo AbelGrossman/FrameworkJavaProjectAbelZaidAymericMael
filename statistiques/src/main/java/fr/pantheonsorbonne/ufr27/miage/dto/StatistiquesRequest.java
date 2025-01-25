@@ -25,6 +25,4 @@ public class StatistiquesRequest {
         this.theme = theme;
     }
 
-    // Classe interne pour la réponse JSON
-
 }

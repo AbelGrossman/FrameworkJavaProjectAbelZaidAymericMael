@@ -17,23 +17,6 @@ public class CamelRoute extends RouteBuilder {
 
     @Override
     public void configure() throws Exception {
-        /*
-        This is for local and test route
-
-        from("direct:fetchQuestions")
-                .routeId("fetchTriviaQuestionsRoute")
-                .log("Fetching questions for category: ${header.category}, difficulty: ${header.difficulty}")
-                .process(exchange -> {
-                    String category = exchange.getMessage().getHeader("category", String.class);
-                    String difficulty = exchange.getMessage().getHeader("difficulty", String.class);
-
-                    List<QuestionDTO> questions = questionServices.askAPIQuestions(category, difficulty);
-
-                    exchange.getMessage().setBody(questions);
-                })
-                .log("Returning questions: ${body}");
-         */
-
         from("sjms2:fetchQuestions")
                 .onException(Exception.class)
                     .log("Error occurred: ${exception.message}")

@@ -5,17 +5,17 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import fr.pantheonsorbonne.ufr27.miage.dto.UserWithMmr;
-import fr.pantheonsorbonne.ufr27.miage.service.QueueManager;
+import fr.pantheonsorbonne.ufr27.miage.service.QueueManagerImpl;
 
 import static org.mockito.Mockito.*;
 
 class QueueListenerTest {
 
-    private QueueManager mockQueueManager;
+    private QueueManagerImpl mockQueueManager;
 
     @BeforeEach
     void setUp() {
-        mockQueueManager = Mockito.mock(QueueManager.class);
+        mockQueueManager = Mockito.mock(QueueManagerImpl.class);
     }
 
     @Test

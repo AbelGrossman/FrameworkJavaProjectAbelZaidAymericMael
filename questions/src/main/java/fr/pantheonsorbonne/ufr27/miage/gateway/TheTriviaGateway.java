@@ -1,4 +1,4 @@
-package fr.pantheonsorbonne.ufr27.miage.camel.gateway;
+package fr.pantheonsorbonne.ufr27.miage.gateway;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,7 +35,7 @@ public class TheTriviaGateway {
                     });
 
             return triviaDTOs.stream()
-                    .map(questionMapper::mapToQuestionDTO)
+                    .map(questionMapper::mapTriviaToQuestionDTO)
                     .collect(Collectors.toList());
 
         } catch (Exception e) {
