@@ -69,6 +69,14 @@ public class GameDAOImpl implements GameDAO {
     }
 
     @Override
+    public String findTeamIdByGameId(Long gameId) {
+        return entityManager.createQuery(
+                "SELECT g.teamId FROM Game g WHERE g.id = :gameId", String.class)
+                .setParameter("gameId", gameId)
+                .getSingleResult();
+    }
+
+    @Override
     public boolean playerResultExists(String playerId, Long gameId) {
         Long count = entityManager.createQuery(
                 "SELECT COUNT(pr) FROM PlayerResult pr WHERE pr.playerId = :playerId AND pr.gameId = :gameId",

@@ -8,11 +8,16 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.dataformat.JsonLibrary;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.List;
 import java.util.Map;
-import jakarta.inject.Singleton;
 
+@ApplicationScoped
 public class GameRouteBis extends RouteBuilder {
+
+    private static final Logger logger = LoggerFactory.getLogger(GameRouteBis.class);
 
     @Inject
     GameService gameService;
@@ -35,6 +40,7 @@ public class GameRouteBis extends RouteBuilder {
                             gameRequest.questions(),
                             teamId);
                     exchange.getIn().setHeader("gameId", gameId);
+                    logger.info("Game initialized with ID: {}", gameId);
                 })
                 .log("Game initialized with ID: ${header.gameId}");
 
@@ -55,16 +61,25 @@ public class GameRouteBis extends RouteBuilder {
                             "teamId", teamId,
                             "isOver", 1);
                     exchange.setProperty("creationPartie", mapper.writeValueAsString(creationPartieData));
+                    logger.info("Preparing to send game completion data for game ID: {}", gameId);
                 })
                 .multicast()
                 .to("direct:sendToStatistics", "direct:sendToCreationPartie");
 
         from("direct:sendToStatistics")
-                .process(exchange -> exchange.getIn().setBody(exchange.getProperty("statistics", String.class)))
+                .process(exchange -> {
+                    String statistics = exchange.getProperty("statistics", String.class);
+                    exchange.getIn().setBody(statistics);
+                    logger.info("Sending statistics data: {}", statistics);
+                })
                 .to("sjms2:statistiques");
 
         from("direct:sendToCreationPartie")
-                .process(exchange -> exchange.getIn().setBody(exchange.getProperty("creationPartie", String.class)))
+                .process(exchange -> {
+                    String creationPartie = exchange.getProperty("creationPartie", String.class);
+                    exchange.getIn().setBody(creationPartie);
+                    logger.info("Sending creation-partie data: {}", creationPartie);
+                })
                 .to("sjms2:creation-partie");
     }
 }

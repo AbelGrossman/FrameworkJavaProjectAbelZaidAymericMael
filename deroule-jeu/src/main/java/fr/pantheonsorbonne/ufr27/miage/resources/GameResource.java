@@ -41,7 +41,7 @@ public class GameResource {
                     request.difficulty(),
                     request.totalQuestions(),
                     request.questions(),
-                     teamId);
+                    teamId);
             return Response.status(Response.Status.CREATED).entity(Map.of("gameId", gameId)).build();
         } catch (IllegalArgumentException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(Map.of("error", e.getMessage())).build();

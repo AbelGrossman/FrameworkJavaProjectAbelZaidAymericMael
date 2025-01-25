@@ -10,6 +10,7 @@ public interface GameDAO {
     Optional<Game> findById(Long id);
     void savePlayerResults(String playerId, long gameId, int score, long averageResponseTime, int rank, String category, int totalQuestions);
     List<PlayerResult> findPlayerResultsByGameId(Long gameId);
+    String findTeamIdByGameId(Long gameId);
     boolean playerResultExists(String playerId, Long gameId);
     void updatePlayerResult(PlayerResult playerResult);
 }

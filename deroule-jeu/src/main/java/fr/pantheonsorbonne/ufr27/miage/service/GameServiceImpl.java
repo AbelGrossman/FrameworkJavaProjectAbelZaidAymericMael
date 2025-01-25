@@ -3,7 +3,7 @@ package fr.pantheonsorbonne.ufr27.miage.service;
 import fr.pantheonsorbonne.ufr27.miage.dao.GameDAO;
 import fr.pantheonsorbonne.ufr27.miage.dto.PlayerResultsRequest;
 import fr.pantheonsorbonne.ufr27.miage.dto.QuestionDTO;
-import fr.pantheonsorbonne.ufr27.miage.exception.*;
+import fr.pantheonsorbonne.ufr27.miage.exception.GameException;
 import fr.pantheonsorbonne.ufr27.miage.gateway.GameCompletionGateway;
 import fr.pantheonsorbonne.ufr27.miage.model.Game;
 import fr.pantheonsorbonne.ufr27.miage.model.Player;
@@ -14,15 +14,15 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import fr.pantheonsorbonne.ufr27.miage.exception.GameException;
 
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.stream.Collectors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class GameServiceImpl implements GameService {
+
     private static final Logger logger = LoggerFactory.getLogger(GameServiceImpl.class);
     private static final int QUESTION_TIMER_SECONDS = 30;
     private static final int ANSWER_DISPLAY_SECONDS = 10;
@@ -50,8 +50,7 @@ public class GameServiceImpl implements GameService {
     public Long initializeGame(List<String> playerIds, String category, String difficulty, int totalQuestions,
             List<QuestionDTO> questions, String teamId) {
         try {
-            logger.info("Initializing game with category: {}, difficulty: {}, totalQuestions: {}", category, difficulty,
-                    totalQuestions);
+            logger.info("Initializing game with category: {}, difficulty: {}, totalQuestions: {}", category, difficulty, totalQuestions);
             logger.info("Player IDs: {}", playerIds);
             logger.info("Questions size: {}", questions.size());
 
@@ -328,13 +327,13 @@ public class GameServiceImpl implements GameService {
 
         Map<String, Integer> rankings = new HashMap<>();
         rankedPlayers.forEach(player -> rankings.put(player.getPlayerId(), player.getRank()));
-        
+
         return rankings;
     }
 
     @Override
-    public void sendToGameCompletionGateway(Long gameId ) {
-        gameCompletionGateway.handleGameCompletion(gameId, getPlayerResultsDTO(gameId), getTeamIdByGameId(gameId));;
+    public void sendToGameCompletionGateway(Long gameId) {
+        gameCompletionGateway.handleGameCompletion(gameId, getPlayerResultsDTO(gameId), getTeamIdByGameId(gameId));
     }
 
     @Override
@@ -357,19 +356,7 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    @Transactional
-    public void sendGameCompletionStatus(Long gameId) {
-        Game game = gameDAO.findById(gameId)
-                .orElseThrow(() -> new GameException.GameNotFoundException(gameId));
-        if (game.isOver()) {
-            String teamId = game.getTeamId();
-        }
-    }
-
-    @Override
     public String getTeamIdByGameId(Long gameId) {
-        return gameDAO.findById(gameId)
-                .map(Game::getTeamId)
-                .orElseThrow(() -> new GameException.GameNotFoundException(gameId));
+        return gameDAO.findTeamIdByGameId(gameId);
     }
 }

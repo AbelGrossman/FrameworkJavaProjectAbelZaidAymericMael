@@ -30,8 +30,6 @@ public interface GameService {
 
     List<PlayerResultsRequest> getPlayerResultsDTO(Long gameId);
 
-    void sendGameCompletionStatus(Long gameId);
-
     String getTeamIdByGameId(Long gameId);
 
     void sendToGameCompletionGateway(Long gameId );
