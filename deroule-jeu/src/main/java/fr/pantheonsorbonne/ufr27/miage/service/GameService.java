@@ -1,6 +1,7 @@
 package fr.pantheonsorbonne.ufr27.miage.service;
 
 import fr.pantheonsorbonne.ufr27.miage.dao.GameDAO;
+import fr.pantheonsorbonne.ufr27.miage.dto.PlayerResultsRequest;
 import fr.pantheonsorbonne.ufr27.miage.dto.QuestionDTO;
 import fr.pantheonsorbonne.ufr27.miage.model.Game;
 import fr.pantheonsorbonne.ufr27.miage.model.Player;
@@ -20,6 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @ApplicationScoped
 public class GameService {
+
     private static final Logger logger = LoggerFactory.getLogger(GameService.class);
     private static final int QUESTION_TIMER_SECONDS = 30;
     private static final int ANSWER_DISPLAY_SECONDS = 10;
@@ -41,7 +43,7 @@ public class GameService {
 
     @Transactional
     public Long initializeGame(List<String> playerIds, String category, String difficulty, int totalQuestions,
-            List<QuestionDTO> questions) {
+                               List<QuestionDTO> questions) {
         try {
             logger.info("Initializing game with category: {}, difficulty: {}, totalQuestions: {}", category, difficulty,
                     totalQuestions);
@@ -326,5 +328,24 @@ public class GameService {
         rankedPlayers.forEach(player -> rankings.put(player.getPlayerId(), player.getRank()));
 
         return rankings;
+    }
+
+    public List<PlayerResultsRequest> getPlayerResultsDTO(Long gameId) {
+        List<PlayerResult> results = gameDAO.findPlayerResultsByGameId(gameId);
+        return results.stream()
+                .map(playerResult -> new PlayerResultsRequest(
+                        convertPlayerIDtoString(playerResult),
+                        playerResult.getScore(),
+                        playerResult.getGameId(),
+                        playerResult.getAverageResponseTime(),
+                        playerResult.getCategory(),
+                        playerResult.getTotalQuestions(),
+                        playerResult.getRank()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    private String convertPlayerIDtoString(PlayerResult playerResultsRequest) {
+        return playerResultsRequest.getPlayerId();
     }
 }

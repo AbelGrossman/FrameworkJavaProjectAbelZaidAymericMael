@@ -15,7 +15,6 @@ public interface OpenDataRestClient {
             @QueryParam("category") String category,
             @QueryParam("difficulty") String difficulty
     );
-
     /*
     Cette API a des numéros pour représenter ses catégories :
     25 = art

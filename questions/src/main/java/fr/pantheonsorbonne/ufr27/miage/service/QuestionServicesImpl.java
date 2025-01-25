@@ -1,8 +1,8 @@
 package fr.pantheonsorbonne.ufr27.miage.service;
 
 
-import fr.pantheonsorbonne.ufr27.miage.camel.gateway.OpenDataGateway;
-import fr.pantheonsorbonne.ufr27.miage.camel.gateway.TheTriviaGateway;
+import fr.pantheonsorbonne.ufr27.miage.gateway.OpenDataGateway;
+import fr.pantheonsorbonne.ufr27.miage.gateway.TheTriviaGateway;
 import fr.pantheonsorbonne.ufr27.miage.dto.QuestionDTO;
 import fr.pantheonsorbonne.ufr27.miage.exception.ServiceException;
 import jakarta.enterprise.context.ApplicationScoped;
