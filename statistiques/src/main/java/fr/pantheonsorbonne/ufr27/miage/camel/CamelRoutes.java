@@ -25,40 +25,20 @@ public class CamelRoutes extends RouteBuilder {
 
     @Override
     public void configure() throws Exception {
-        // Gestion des exceptions pour les données invalides
+
         onException(Exception.class)
                 .handled(true)
                 .setHeader("success", simple("false"))
                 .setBody(simple("Error processing statistiques: ${exception.message}"))
                 .log("Erreur : ${exception.message}");
 
-        // Route d'émission
-        //from("direct:sendStatistiques")
-        //       .marshal().json()
-        //        .to("sjms2:" + jmsPrefix + "partieStatistiques")
-        //        .log("Statistiques envoyées : ${body}");
-
-        // Route de réception
         from("direct:statistiquesUpdate")
-                .unmarshal().json(PartieDetails.class)
+                .log("Received JSON: ${body}")
                 .process(exchange -> {
-                    PartieDetails partieDetails = exchange.getIn().getBody(PartieDetails.class);
-
-                    if (partieDetails == null || partieDetails.getPlayerId() == null || partieDetails.getTheme() == null) {
-                        throw new IllegalArgumentException("Missing required data (playerId, theme, or other fields)");
-                    }
-
-                    // Appel du service pour mettre à jour les statistiques
-                    statistiquesService.updateStatistiques(
-                            partieDetails.getPlayerId(),
-                            partieDetails.getRangPartie(),
-                            partieDetails.getScorePartie(),
-                            partieDetails.getNbQuestions(),
-                            partieDetails.getTheme(),
-                            partieDetails.getTempsRepMoyen()
-                    );
+                    String jsonInput = exchange.getIn().getBody(String.class);
+                    statistiquesService.processAndUpdateStatistiques(jsonInput);
                 })
-                .log("Statistiques mises à jour pour l'utilisateur : ${body.playerId}");
+                .log("Statistiques mises à jour");
 
         from("sjms2:M1.StatistiquesService")
                 .log("Request received for user and theme verification")
@@ -73,14 +53,12 @@ public class CamelRoutes extends RouteBuilder {
                     Long playerId = request.getPlayerId();
                     String theme = request.getTheme();
 
-                    // Vérification et création des statistiques si nécessaires
                     StatistiquesParTheme statsParTheme = statistiquesService.getStatistiquesParTheme(playerId, theme);
                     if (statsParTheme == null) {
                         log.info("No stats found for playerId = {} and theme = {}. Creating new stats.", playerId, theme);
                         statistiquesService.createStatistiqueUser(playerId, theme);
                     }
 
-                    // Préparation des informations pour la prochaine route
                     exchange.getIn().setHeader("playerId", playerId);
                     exchange.getIn().setHeader("theme", theme);
                 })
@@ -93,19 +71,16 @@ public class CamelRoutes extends RouteBuilder {
                     Long playerId = exchange.getIn().getHeader("playerId", Long.class);
                     String theme = exchange.getIn().getHeader("theme", String.class);
 
-                    // Récupération des statistiques par thème
                     StatistiquesParTheme statsParTheme = statistiquesService.getStatistiquesParTheme(playerId, theme);
                     if (statsParTheme == null) {
                         throw new IllegalArgumentException("Unable to retrieve stats for playerId = " + playerId + " and theme = " + theme);
                     }
 
-                    // Création de l'objet StatistiquesResponse
                     StatistiquesResponse response = new StatistiquesResponse();
                     response.setPlayerId(playerId);
                     response.setTheme(theme);
                     response.setMmr(statsParTheme.getMmr());
 
-                    // Préparation de la réponse
                     exchange.getIn().setBody(response);
                 })
                 .log("Statistiques Response : ${body}")

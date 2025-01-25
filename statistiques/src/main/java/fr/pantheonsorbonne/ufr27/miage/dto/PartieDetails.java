@@ -1,20 +1,41 @@
 package fr.pantheonsorbonne.ufr27.miage.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import fr.pantheonsorbonne.ufr27.miage.service.StatistiquesServiceImpl;
+
 public class PartieDetails {
 
-    private Long playerId;
-    private int rangPartie;
-    private int scorePartie;
-    private int nbQuestions;
-    private String theme;
-    private double tempsRepMoyen;
+    @JsonProperty("playerId")
+    private String playerId;
 
-    // Getters et Setters
+    @JsonProperty("score")
+    private int scorePartie;
+
+    @JsonProperty("gameId")
+    private String gameId;
+
+    @JsonProperty("averageResponseTime")
+    private long tempsRepMoyen;
+
+//    @JsonProperty("id")
+//    private int id;
+
+    @JsonProperty("category")
+    private String theme;
+
+    @JsonProperty("rank")
+    private int rangPartie;
+
+    @JsonProperty("totalQuestions")
+    private int nbQuestions;
+
+    // Getters et setters
     public Long getPlayerId() {
-        return playerId;
+        StatistiquesServiceImpl statistiquesService = new StatistiquesServiceImpl();
+        return statistiquesService.convertPlayerId(playerId);
     }
 
-    public void setPlayerId(Long playerId) {
+    public void setPlayerId(String playerId) {
         this.playerId = playerId;
     }
 
@@ -50,11 +71,11 @@ public class PartieDetails {
         this.theme = theme;
     }
 
-    public double getTempsRepMoyen() {
+    public long getTempsRepMoyen() {
         return tempsRepMoyen;
     }
 
-    public void setTempsRepMoyen(double tempsRepMoyen) {
+    public void setTempsRepMoyen(long tempsRepMoyen) {
         this.tempsRepMoyen = tempsRepMoyen;
     }
 }
