@@ -6,7 +6,6 @@ import fr.pantheonsorbonne.ufr27.miage.model.StatistiquesParTheme;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 
 @Path("/stats")
 @Produces(MediaType.APPLICATION_JSON)

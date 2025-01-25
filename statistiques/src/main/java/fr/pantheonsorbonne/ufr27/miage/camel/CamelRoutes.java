@@ -1,6 +1,5 @@
 package fr.pantheonsorbonne.ufr27.miage.camel;
 
-import fr.pantheonsorbonne.ufr27.miage.dto.PartieDetails;
 import fr.pantheonsorbonne.ufr27.miage.dto.StatistiquesRequest;
 import fr.pantheonsorbonne.ufr27.miage.dto.StatistiquesResponse;
 import fr.pantheonsorbonne.ufr27.miage.model.StatistiquesParTheme;

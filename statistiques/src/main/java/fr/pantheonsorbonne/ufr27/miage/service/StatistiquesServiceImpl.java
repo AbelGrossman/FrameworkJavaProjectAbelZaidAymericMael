@@ -77,10 +77,8 @@ public class StatistiquesServiceImpl implements StatistiquesService {
     }
 
     public void createStatistiqueUser(Long playerId, String theme) {
-        // Vérification si les statistiques globales existent déjà
         StatistiquesJoueur existingStats = statistiquesDAO.getStatistiquesJoueur(playerId);
         System.out.println("Existing Stats: " + existingStats);
-        // Création des statistiques globales si elles n'existent pas
 
         int initialNbVictoires = 0;
         int initialMMR = 0;
@@ -100,7 +98,6 @@ public class StatistiquesServiceImpl implements StatistiquesService {
             System.out.println("Created global stats for player " + playerId);
         }
 
-        // Création des statistiques par thème
         statistiquesDAO.createOrUpdateStatistiquesParTheme(
                 playerId,
                 theme,
@@ -110,14 +107,14 @@ public class StatistiquesServiceImpl implements StatistiquesService {
                 initialTempsRepMoyen,
                 initialNbPartie
         );
-        System.out.println("Created statistics for theme: " + theme); // Log pour création par thème
+        System.out.println("Created statistics for theme: " + theme);
     }
 
     private int calculateMMR(int rangPartie) {
         int mmr;
         int maxPoints = 50;
         int minPoints = -40;
-        int numberOfPlayers = 6; // Exemple : nombre total de joueurs dans la partie
+        int numberOfPlayers = 6;
 
         if (rangPartie == 1) {
             mmr = maxPoints;

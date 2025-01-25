@@ -17,9 +17,6 @@ public class PartieDetails {
     @JsonProperty("averageResponseTime")
     private long tempsRepMoyen;
 
-//    @JsonProperty("id")
-//    private int id;
-
     @JsonProperty("category")
     private String theme;
 
@@ -29,7 +26,6 @@ public class PartieDetails {
     @JsonProperty("totalQuestions")
     private int nbQuestions;
 
-    // Getters et setters
     public Long getPlayerId() {
         StatistiquesServiceImpl statistiquesService = new StatistiquesServiceImpl();
         return statistiquesService.convertPlayerId(playerId);

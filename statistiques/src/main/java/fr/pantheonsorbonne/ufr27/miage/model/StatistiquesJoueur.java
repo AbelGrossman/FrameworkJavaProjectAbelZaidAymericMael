@@ -29,7 +29,6 @@ public class StatistiquesJoueur {
     @Column(name = "tempsRepMoyen", nullable = false)
     private long tempsRepMoyen;
 
-    // Getters and Setters
     public Integer getId() { return id;}
 
     public void setId(Integer id) { this.id = id;}
