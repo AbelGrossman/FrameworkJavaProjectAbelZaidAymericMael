@@ -8,7 +8,7 @@ import org.mockito.Mockito;
 import static org.junit.jupiter.api.Assertions.*;
 
 
-import fr.pantheonsorbonne.ufr27.miage.service.QueueManager;
+import fr.pantheonsorbonne.ufr27.miage.service.QueueManagerImpl;
 import fr.pantheonsorbonne.ufr27.miage.dao.TeamDAO;
 import fr.pantheonsorbonne.ufr27.miage.dto.UserWithMmr;
 import fr.pantheonsorbonne.ufr27.miage.gateway.TeamGateway;
@@ -16,13 +16,13 @@ import fr.pantheonsorbonne.ufr27.miage.model.Queue;
 
 class QueueManagerTest {
 
-    private QueueManager queueManager;
+    private QueueManagerImpl queueManager;
     private TeamDAO mockTeamDAO;
 
     @BeforeEach
     void setUp() {
         mockTeamDAO = Mockito.mock(TeamDAO.class);
-        queueManager = new QueueManager(mockTeamDAO);
+        queueManager = new QueueManagerImpl(mockTeamDAO);
     }
 
     @Test
@@ -52,7 +52,7 @@ class QueueManagerTest {
 
     @Test
     void testAllowedMmrIncreasesPeriodically() throws InterruptedException {
-    QueueManager realQueueManager = new QueueManager(mockTeamDAO);
+    QueueManagerImpl realQueueManager = new QueueManagerImpl(mockTeamDAO);
 
     // Add a queue with only 3 players (not enough for a team)
     for (Long i = 1L; i <= 3; i++) {

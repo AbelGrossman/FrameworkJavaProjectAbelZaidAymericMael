@@ -4,6 +4,9 @@ import fr.pantheonsorbonne.ufr27.miage.dto.AuthResponse;
 import fr.pantheonsorbonne.ufr27.miage.dto.JoinGameRequest;
 import fr.pantheonsorbonne.ufr27.miage.dto.LoginRequest;
 import fr.pantheonsorbonne.ufr27.miage.dto.RegisterRequest;
+import fr.pantheonsorbonne.ufr27.miage.exception.DuplicateRequestException;
+import fr.pantheonsorbonne.ufr27.miage.exception.JoinRequestNotFoundException;
+import fr.pantheonsorbonne.ufr27.miage.exception.PlayerNotFoundException;
 import fr.pantheonsorbonne.ufr27.miage.gateway.GameCreationGateway;
 import fr.pantheonsorbonne.ufr27.miage.service.GameCreationService;
 import fr.pantheonsorbonne.ufr27.miage.service.AuthenticationService;
@@ -35,21 +38,28 @@ public class GameRequestResource {
                         .entity(Map.of("error", "Invalid token"))
                         .build();
             }
+
             gameCreationGateway.publishJoinRequest(joinRequest);
-
-
 
             return Response.ok(Map.of(
                     "message", "Join request accepted",
                     "playerId", joinRequest.playerId()
             )).build();
-
+        } catch (DuplicateRequestException e) {
+            return Response.status(Response.Status.CONFLICT)
+                    .entity(Map.of("error", e.getMessage()))
+                    .build();
+        } catch (PlayerNotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(Map.of("error", e.getMessage()))
+                    .build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity(Map.of("error", e.getMessage()))
                     .build();
         }
     }
+
 
     @DELETE
     @Path("/leave/{playerId}")
@@ -61,7 +71,11 @@ public class GameRequestResource {
                     "message", "Successfully left the queue",
                     "playerId", playerId
             )).build();
-        } catch (Exception e) {
+        }catch (JoinRequestNotFoundException | PlayerNotFoundException e) {
+                return Response.status(Response.Status.NOT_FOUND)
+                        .entity(Map.of("error", e.getMessage()))
+                        .build();
+            } catch (Exception e) {
             return Response
                     .status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity(Map.of("error", "Failed to leave queue"))

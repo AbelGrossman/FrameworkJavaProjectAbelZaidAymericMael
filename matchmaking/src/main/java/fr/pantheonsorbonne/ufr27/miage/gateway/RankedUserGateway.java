@@ -2,7 +2,7 @@ package fr.pantheonsorbonne.ufr27.miage.gateway;
 
 
 import fr.pantheonsorbonne.ufr27.miage.dto.UserWithMmr;
-import fr.pantheonsorbonne.ufr27.miage.service.QueueManager;
+import fr.pantheonsorbonne.ufr27.miage.service.QueueManagerImpl;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -12,7 +12,7 @@ import jakarta.inject.Named;
 public class RankedUserGateway {
 
     @Inject
-    QueueManager queueManager;
+    QueueManagerImpl queueManager;
     
     public void processRankedUser(UserWithMmr rankedUser) {
         queueManager.addPlayerToQueue(rankedUser);
