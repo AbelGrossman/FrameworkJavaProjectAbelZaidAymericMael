@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Table(name = "TeamResponse")
 public class TeamResponse {
     @Id
     private String id;
@@ -16,7 +17,7 @@ public class TeamResponse {
 
     @ElementCollection
     @CollectionTable(
-            name = "team_players",
+            name = "team_response_players", // Changed table name
             joinColumns = @JoinColumn(name = "team_id")
     )
     @Column(name = "player_id")

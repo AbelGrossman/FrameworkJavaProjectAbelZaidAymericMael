@@ -1,5 +1,6 @@
 package fr.pantheonsorbonne.ufr27.miage.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.*;
@@ -7,7 +8,6 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "teams")
 public class Team {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -18,11 +18,11 @@ public class Team {
 
     @ElementCollection
     @CollectionTable(
-        name = "team_players",
-        joinColumns = @JoinColumn(name = "team_id") 
+            name = "team_game_players", // Changed table name
+            joinColumns = @JoinColumn(name = "team_id")
     )
-    @Column(name = "players", nullable = false)
-    private List<Long> players;
+    @Column(name = "player_id", nullable = false) // Changed column name
+    private List<Long> players = new ArrayList<>(); // Initialize list
 
     @Column(name = "difficulty", nullable = false)
     private String difficulty;
