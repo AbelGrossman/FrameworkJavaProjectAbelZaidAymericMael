@@ -51,11 +51,9 @@ public class GameRoute extends RouteBuilder {
 
                     ObjectMapper mapper = new ObjectMapper();
 
-                    // Statistics data
                     Map<String, Object> statisticsData = Map.of("playerResults", playerResults);
                     exchange.setProperty("statistics", statisticsData);
 
-                    // Creation-partie data
                     String teamId = gameService.getTeamIdByGameId(gameId);
                     Map<String, Object> creationPartieData = Map.of(
                             "teamId", teamId,
@@ -70,7 +68,7 @@ public class GameRoute extends RouteBuilder {
         .process(exchange -> {
             Map<String, Object> statisticsData = exchange.getProperty("statistics", Map.class);
             ObjectMapper mapper = new ObjectMapper();
-            String json = mapper.writeValueAsString(statisticsData.get("playerResults")); // Extract and serialize playerResults
+            String json = mapper.writeValueAsString(statisticsData.get("playerResults")); 
             exchange.getIn().setBody(json);
             logger.info("Sending statistics data: {}", json);
         })

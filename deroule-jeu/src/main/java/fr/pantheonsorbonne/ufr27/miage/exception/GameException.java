@@ -62,4 +62,40 @@ public class GameException extends RuntimeException {
             super("Number of questions does not match totalQuestions.");
         }
     }
+
+    public static class TeamIdMissingException extends GameException {
+        public TeamIdMissingException() {
+            super("TeamId header is required");
+        }
+    }
+
+    public static class AnswerAlreadySubmittedException extends GameException {
+        public AnswerAlreadySubmittedException(String playerId) {
+            super("Player " + playerId + " has already submitted an answer for this question");
+        }
+    }
+
+    public static class GameAlreadyFinishedException extends GameException {
+        public GameAlreadyFinishedException(Long gameId) {
+            super("Game " + gameId + " has already been finished");
+        }
+    }
+
+    public static class GameStillInProgressException extends GameException {
+        public GameStillInProgressException(Long gameId) {
+            super("Game " + gameId + " is still in progress");
+        }
+    }
+
+    public static class PlayerResultAlreadyExistsException extends GameException {
+        public PlayerResultAlreadyExistsException(String playerId, Long gameId) {
+            super("Result already exists for player " + playerId + " in game " + gameId);
+        }
+    }
+
+    public static class GameEndedException extends GameException {
+        public GameEndedException(Long gameId) {
+            super("Game " + gameId + " has ended");
+        }
+    }
 }
