@@ -79,7 +79,7 @@ Ce lien vous renverra vers la page principale.
 
 ## 4. Diagramme de Séquence
 
-![Diagramme de séquence](https://github.com/user-attachments/assets/4fd658b0-7a06-4076-a037-6b79d9db255f)
+![Diagramme de séquence (1)](https://github.com/user-attachments/assets/af98dd23-39a4-4079-b685-5f296ab17ae3)
 
 ---
 
