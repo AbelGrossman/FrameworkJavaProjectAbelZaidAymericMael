@@ -62,18 +62,20 @@ cd InfinitQuizz
 
 ### 2. **Lancer en Mode Développement**
 
-Quarkus facilite le développement avec son mode live-coding 🚀. Pour démarrer l'application :
+Quarkus facilite le développement avec son mode live-coding 🚀. Pour démarrer l'application, il faut exécuter la commande suivante dans chaque microservice :
 
 ```bash
+cd "nom-du-dossier"
 ./mvnw quarkus:dev
 
 ```
+Les noms des dossiers sont les suivants : "creation-partie" , "deroule-jeu" , "matchmaking" , "questions" , "statistiques"
 
 Votre application sera accessible à l'adresse :
 
 [http://localhost:8080](http://localhost:8080/)
 
-Ce lien vous renverra vers la page principale.
+Ce lien vous renverra vers la page principale, à partir de laquelle vous pourrez vous connecter, puis rejoindre une partie du thème de votre choix !
 
 --- 
 
@@ -83,7 +85,7 @@ Ce lien vous renverra vers la page principale.
 
 ---
 
-## 4. Démo
+## 5. Démo
 
 
 ---
