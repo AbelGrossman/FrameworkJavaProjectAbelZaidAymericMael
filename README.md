@@ -3,8 +3,8 @@
 # 📚 Projet INF2 - Java Framework : Mini-Kahoot en Quarkus 🎮
 
 ### Bienvenue sur notre projet réalisé dans le cadre de la matière **INF2 - Java Framework** !
-Nous avons décidé de relever un défi amusant et technique : développer une application en **Java avec Quarkus**, inspirée du célèbre outil interactif **Kahoot**. 🏆
-Le jeu fonctionne par un système de parties thématiques. Chaque partie a un thème unique, et est composée de six joueurs.
+### Nous avons décidé de relever un défi amusant et technique : développer une application en **Java avec Quarkus**, inspirée du célèbre outil interactif **Kahoot**. 🏆
+### Le jeu fonctionne par un système de parties thématiques. Chaque partie a un thème unique, et est composée de six joueurs.
 ---
 
 ## 1. Objectif du Projet 🎯
