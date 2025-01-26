@@ -1,6 +1,9 @@
 package fr.pantheonsorbonne.ufr27.miage.model;
 
 import jakarta.persistence.*;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Entity
@@ -31,13 +34,13 @@ public class Game {
     }
 
     public Game(String category, String difficulty, List<Player> players, int totalQuestions,
-            List<Question> questions, String teamId) {
+                List<Question> questions, String teamId) {
         this.category = category;
         this.difficulty = difficulty;
-        this.players = players;
+        this.players = new ArrayList<>(players);  // Create mutable list
         this.totalQuestions = totalQuestions;
-        this.questions = questions;
-        this.ranks = List.of(0, 0, 0, 0, 0, 0);
+        this.questions = new ArrayList<>(questions); // Create mutable list
+        this.ranks = new ArrayList<>(Arrays.asList(0, 0, 0, 0, 0, 0)); // Create mutable list
         this.teamId = teamId;
     }
 

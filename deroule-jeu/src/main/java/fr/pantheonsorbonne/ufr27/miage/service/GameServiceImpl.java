@@ -1,6 +1,7 @@
 package fr.pantheonsorbonne.ufr27.miage.service;
 
 import fr.pantheonsorbonne.ufr27.miage.dao.GameDAO;
+import fr.pantheonsorbonne.ufr27.miage.dao.QuestionDAO;
 import fr.pantheonsorbonne.ufr27.miage.dto.PlayerResultsRequest;
 import fr.pantheonsorbonne.ufr27.miage.dto.QuestionDTO;
 import fr.pantheonsorbonne.ufr27.miage.exception.GameException;
@@ -45,55 +46,80 @@ public class GameServiceImpl implements GameService {
     @Inject
     GameCompletionGateway gameCompletionGateway;
 
+    @Inject
+    QuestionDAO questionDAO;
+
     @Override
     @Transactional
     public Long initializeGame(List<String> playerIds, String category, String difficulty, int totalQuestions,
-            List<QuestionDTO> questions, String teamId) {
+                               List<QuestionDTO> questionsDTO, String teamId) {
         try {
-            logger.info("Initializing game with category: {}, difficulty: {}, totalQuestions: {}", category, difficulty, totalQuestions);
-            logger.info("Player IDs: {}", playerIds);
-            logger.info("Questions size: {}", questions.size());
-
-            if (playerIds == null || playerIds.size() != 6) {
-                throw new IllegalArgumentException("Game must have exactly 6 players.");
-            }
-
-            if (totalQuestions <= 0) {
-                throw new IllegalArgumentException("Total questions must be greater than 0.");
-            }
-
-            if (questions == null || questions.size() != totalQuestions) {
-                throw new IllegalArgumentException("Number of questions does not match totalQuestions.");
-            }
+            validateGameParameters(playerIds, totalQuestions, questionsDTO);
 
             List<Player> players = retrievePlayers(playerIds);
-            logger.info("Created players: {}", players.size());
+            currentGame = new Game(category, difficulty, players, totalQuestions, new ArrayList<>(), teamId);
 
-            List<Question> questionEntities = questions.stream()
+            // Save game first to get ID
+            gameDAO.save(currentGame);
+
+            // Create and save questions with game association
+            List<Question> questions = questionsDTO.stream()
                     .map(q -> new Question(q.type(), q.difficulty(), q.category(),
                             q.question(), q.correct_answer(), q.incorrect_answers()))
+                    .peek(q -> questionDAO.saveQuestion(q, currentGame))
                     .collect(Collectors.toList());
-            logger.info("Mapped questions: {}", questionEntities.size());
 
-            currentGame = new Game(category, difficulty, players, totalQuestions, questionEntities, teamId);
-            logger.info("Game created, saving to database...");
-
+            currentGame.setQuestions(questions);
             gameDAO.save(currentGame);
+
             currentGameId = currentGame.getId();
             gameId = currentGameId;
-            logger.info("Game saved with ID: {}", currentGameId);
 
-            currentQuestionIndex.set(0);
-            scheduler = Executors.newSingleThreadScheduledExecutor();
-            resetPlayerAnsweredStatus();
-            questionStartTime = System.currentTimeMillis();
-            startQuestionTimer();
+            initializeGameState();
 
             return currentGameId;
         } catch (Exception e) {
             logger.error("Error initializing game:", e);
             throw e;
         }
+    }
+
+    @Override
+    public List<QuestionDTO> getQuestionsForGame(String playerId) {
+        if (currentGame == null) {
+            throw new GameException.GameNotInitializedException();
+        }
+
+        if (!isPlayerAllowed(playerId)) {
+            throw new GameException.PlayerNotAllowedException(playerId);
+        }
+
+        List<Question> questions = questionDAO.findQuestionsForGame(currentGame.getId());
+
+        return questions.stream()
+                .map(q -> new QuestionDTO(q.getType(), q.getDifficulty(), q.getCategory(),
+                        q.getQuestion(), q.getCorrect_answer(), q.getIncorrect_answers()))
+                .collect(Collectors.toList());
+    }
+
+    private void validateGameParameters(List<String> playerIds, int totalQuestions, List<QuestionDTO> questions) {
+        if (playerIds == null || playerIds.size() != 6) {
+            throw new IllegalArgumentException("Game must have exactly 6 players.");
+        }
+        if (totalQuestions <= 0) {
+            throw new IllegalArgumentException("Total questions must be greater than 0.");
+        }
+        if (questions == null || questions.size() != totalQuestions) {
+            throw new IllegalArgumentException("Number of questions does not match totalQuestions.");
+        }
+    }
+
+    private void initializeGameState() {
+        currentQuestionIndex.set(0);
+        scheduler = Executors.newSingleThreadScheduledExecutor();
+        resetPlayerAnsweredStatus();
+        questionStartTime = System.currentTimeMillis();
+        startQuestionTimer();
     }
 
     @Override
@@ -236,23 +262,7 @@ public class GameServiceImpl implements GameService {
         return gameState;
     }
 
-    @Override
-    public List<QuestionDTO> getQuestionsForGame(String playerId) {
-        if (currentGame == null) {
-            logger.error("Game not initialized");
-            throw new GameException.GameNotInitializedException();
-        }
 
-        if (!isPlayerAllowed(playerId)) {
-            logger.error("Player {} is not allowed to access the questions", playerId);
-            throw new GameException.PlayerNotAllowedException(playerId);
-        }
-
-        return currentGame.getQuestions().stream()
-                .map(q -> new QuestionDTO(q.getType(), q.getDifficulty(), q.getCategory(),
-                        q.getQuestion(), q.getCorrect_answer(), q.getIncorrect_answers()))
-                .collect(Collectors.toList());
-    }
 
     private boolean isPlayerAllowed(String playerId) {
         return currentGame.getPlayers().stream()

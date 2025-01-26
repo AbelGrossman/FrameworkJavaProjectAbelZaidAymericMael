@@ -2,7 +2,9 @@ package fr.pantheonsorbonne.ufr27.miage.model;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
 import java.util.List;
+
 
 @Entity
 public class Question {
@@ -14,19 +16,25 @@ public class Question {
     private String category;
     private String question;
     private String correct_answer;
+
     @ElementCollection
     private List<String> incorrect_answers;
+
+    @ManyToOne
+    @JoinColumn(name = "game_id")
+    private Game game;
 
     public Question() {
     }
 
-    public Question(String type, String difficulty, String category, String question, String correct_answer, List<String> incorrect_answers) {
+    public Question(String type, String difficulty, String category, String question,
+                    String correct_answer, List<String> incorrect_answers) {
         this.type = type;
         this.difficulty = difficulty;
         this.category = category;
         this.question = question;
         this.correct_answer = correct_answer;
-        this.incorrect_answers = incorrect_answers;
+        this.incorrect_answers = new ArrayList<>(incorrect_answers);
     }
 
     public Long getId() {
@@ -83,5 +91,13 @@ public class Question {
 
     public void setIncorrect_answers(List<String> incorrect_answers) {
         this.incorrect_answers = incorrect_answers;
+    }
+
+    public Game getGame() {
+        return game;
+    }
+
+    public void setGame(Game game) {
+        this.game = game;
     }
 }
