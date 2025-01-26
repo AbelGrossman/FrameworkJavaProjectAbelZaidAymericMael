@@ -1,6 +1,8 @@
 package fr.pantheonsorbonne.ufr27.miage.service;
 
 import fr.pantheonsorbonne.ufr27.miage.dao.PlayerDao;
+import fr.pantheonsorbonne.ufr27.miage.exception.InvalidCredentialsException;
+import fr.pantheonsorbonne.ufr27.miage.exception.UsernameAlreadyExistsException;
 import fr.pantheonsorbonne.ufr27.miage.model.Player;
 import fr.pantheonsorbonne.ufr27.miage.dto.LoginRequest;
 import fr.pantheonsorbonne.ufr27.miage.dto.RegisterRequest;
@@ -19,9 +21,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     PlayerDao playerDao;
 
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
+    public AuthResponse register(RegisterRequest request) throws UsernameAlreadyExistsException {
         if (playerDao.existsByUsername(request.username())) {
-            throw new RuntimeException("Username already exists");
+            throw new UsernameAlreadyExistsException(request.username());
         }
 
         Player player = new Player();
@@ -34,12 +36,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return new AuthResponse(player.getId(), player.getUsername(), token);
     }
 
-    public AuthResponse login(LoginRequest request) {
+    public AuthResponse login(LoginRequest request) throws InvalidCredentialsException {
         Player player = playerDao.findByUsername(request.username())
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+                .orElseThrow(InvalidCredentialsException::new);
 
         if (!verifyPassword(request.password(), player.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new InvalidCredentialsException();
         }
 
         String token = generateToken(player);

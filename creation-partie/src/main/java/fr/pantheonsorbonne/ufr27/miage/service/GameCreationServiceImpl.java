@@ -24,11 +24,11 @@ public class GameCreationServiceImpl implements GameCreationService {
     public void validateNewRequest(Long playerId) throws PlayerNotFoundException,DuplicateRequestException {
         // Vérifier d'abord si le joueur existe
         if (!playerRequestDao.existsPlayer(playerId)) {
-            throw new PlayerNotFoundException("Player not found with ID: " + playerId);
+            throw new PlayerNotFoundException(playerId);
         }
         Optional<PlayerRequest> existingRequest = playerRequestDao.findActiveRequestByPlayerId(playerId);
         if (existingRequest.isPresent()) {
-            throw new DuplicateRequestException("Player already has an active request or is in game");
+            throw new DuplicateRequestException();
         }
     }
 
@@ -37,11 +37,11 @@ public class GameCreationServiceImpl implements GameCreationService {
     public void validateCancelRequest(Long playerId) throws PlayerNotFoundException, JoinRequestNotFoundException {
         // Vérifier d'abord si le joueur existe
         if (!playerRequestDao.existsPlayer(playerId)) {
-            throw new PlayerNotFoundException("Player not found with ID: " + playerId);
+            throw new PlayerNotFoundException(playerId);
         }
         Optional<PlayerRequest> existingRequest = playerRequestDao.findActiveRequestByPlayerId(playerId);
         if (existingRequest.isEmpty()) {
-            throw new JoinRequestNotFoundException("You need to join a game before canceling");
+            throw new JoinRequestNotFoundException();
         }
     }
 
