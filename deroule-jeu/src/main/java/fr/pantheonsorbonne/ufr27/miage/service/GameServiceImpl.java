@@ -87,7 +87,14 @@ public class GameServiceImpl implements GameService {
     @Override
     public List<QuestionDTO> getQuestionsForGame(String playerId) {
         if (currentGame == null) {
-            throw new GameException.GameNotInitializedException();
+            // Try to find game from database
+            Long gameId = gameDAO.findGameIdByPlayerId(playerId);
+            if (gameId != null) {
+                currentGame = gameDAO.findById(gameId)
+                        .orElseThrow(() -> new GameException.GameNotInitializedException());
+            } else {
+                throw new GameException.GameNotInitializedException();
+            }
         }
 
         if (!isPlayerAllowed(playerId)) {
@@ -95,7 +102,6 @@ public class GameServiceImpl implements GameService {
         }
 
         List<Question> questions = questionDAO.findQuestionsForGame(currentGame.getId());
-
         return questions.stream()
                 .map(q -> new QuestionDTO(q.getType(), q.getDifficulty(), q.getCategory(),
                         q.getQuestion(), q.getCorrect_answer(), q.getIncorrect_answers()))
