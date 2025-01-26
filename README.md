@@ -1,3 +1,5 @@
+# README
+
 # 📚 Projet INF2 - Java Framework : Mini-Kahoot en Quarkus 🎮
 
 Bienvenue sur notre projet réalisé dans le cadre de la matière **INF2 - Java Framework** !
@@ -77,7 +79,7 @@ Ce lien vous renverra vers la page principale.
 
 ## 4. Diagramme de Séquence
 
-![Diagramme de séquence](https://github.com/user-attachments/assets/4fd658b0-7a06-4076-a037-6b79d9db255f)# README
+![Diagramme de séquence](https://github.com/user-attachments/assets/4fd658b0-7a06-4076-a037-6b79d9db255f)
 
 ---
 
