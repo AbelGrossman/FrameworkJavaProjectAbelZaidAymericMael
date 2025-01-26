@@ -32,7 +32,7 @@ public class CamelRoutes extends RouteBuilder {
                 .log("Erreur : ${exception.message}");
 
         from("sjms2:statistiquesUpdate")
-                .log("Received JSON: ${body}")
+                .log("Received JSON from deroule-jeu: ${body}")
                 .process(exchange -> {
                     String jsonInput = exchange.getIn().getBody(String.class);
                     statistiquesService.processAndUpdateStatistiques(jsonInput);

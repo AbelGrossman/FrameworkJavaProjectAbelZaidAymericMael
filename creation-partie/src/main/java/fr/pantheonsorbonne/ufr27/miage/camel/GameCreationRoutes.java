@@ -45,9 +45,10 @@ public class GameCreationRoutes extends RouteBuilder {
                 .to("sjms2:DerouleJeuService");
 
         from("sjms2:DerouleJeuServiceFinished")
-                .log("Message reçue : ${body}")
+                .log("Message reçue from deroule-jeu : ${body}")
                 .unmarshal().json(JsonLibrary.Jackson, GameIsFinished.class)
-                .bean(gateway,"handleUpdateToFinished");
+                .bean(gateway,"handleUpdateToFinished")
+                .log("Game is finished : ${body}");
 
 
     }
