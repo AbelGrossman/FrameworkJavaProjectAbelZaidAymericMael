@@ -75,10 +75,7 @@ public class CamelRoutes extends RouteBuilder {
                         throw new IllegalArgumentException("Unable to retrieve stats for playerId = " + playerId + " and theme = " + theme);
                     }
 
-                    StatistiquesResponse response = new StatistiquesResponse();
-                    response.setPlayerId(playerId);
-                    response.setTheme(theme);
-                    response.setMmr(statsParTheme.getMmr());
+                    StatistiquesResponse response = new StatistiquesResponse(playerId, theme, statsParTheme.getMmr());
 
                     exchange.getIn().setBody(response);
                 })

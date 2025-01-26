@@ -23,12 +23,12 @@ public class StatistiquesServiceImpl implements StatistiquesService {
         PartieDetails[] partieDetailsArray = objectMapper.readValue(jsonInput, PartieDetails[].class);
         for (PartieDetails partieDetails : partieDetailsArray) {
             updateStatistiques(
-                    partieDetails.getPlayerId(),
-                    partieDetails.getRangPartie(),
-                    partieDetails.getScorePartie(),
-                    partieDetails.getNbQuestions(),
-                    partieDetails.getTheme(),
-                    partieDetails.getTempsRepMoyen()
+                    partieDetails.getPlayerIdConverted(),
+                    partieDetails.rangPartie(),
+                    partieDetails.scorePartie(),
+                    partieDetails.nbQuestions(),
+                    partieDetails.theme(),
+                    partieDetails.tempsRepMoyen()
             );
         }
     }
