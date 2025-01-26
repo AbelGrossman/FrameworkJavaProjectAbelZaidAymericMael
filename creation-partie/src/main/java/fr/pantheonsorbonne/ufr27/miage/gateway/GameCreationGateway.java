@@ -1,5 +1,6 @@
 package fr.pantheonsorbonne.ufr27.miage.gateway;
 
+import fr.pantheonsorbonne.ufr27.miage.dto.GameIsFinished;
 import fr.pantheonsorbonne.ufr27.miage.dto.JoinGameRequest;
 import fr.pantheonsorbonne.ufr27.miage.dto.QuestionDTO;
 import fr.pantheonsorbonne.ufr27.miage.dto.TeamResponseDto;
@@ -49,8 +50,9 @@ public class GameCreationGateway {
 
     public void combineTeamAndQuestions(List<QuestionDTO> questionsResponse, Exchange exchange) throws Exception {
         // Get teamId from header
-        String teamId = exchange.getMessage().getHeader("id", String.class);
 
+        String teamId = exchange.getMessage().getHeader("id", String.class);
+        
         if (teamId == null) {
             exchange.getMessage().setBody(mapper.writeValueAsString(
                     Map.of("error", "Team ID not found in header")
@@ -59,20 +61,24 @@ public class GameCreationGateway {
             return;
         }
 
+        exchange.getMessage().setHeader("teamId",teamId);
         // Get stored team data
         TeamResponseDto team = teamResponses.get(teamId);
 
         if (team != null) {
             // Combine team and questions data
+            List<String> playerIdStrings = team.players().stream()
+                                        .map(String::valueOf) // Convert each Long to String
+                                        .toList();
             Map<String, Object> gameData = Map.of(
-                    "playerIds", team.players(),
+                    "playerIds", playerIdStrings,
                     "difficulty", team.difficulty(),
                     "category", team.theme(),
                     "totalQuestions", questionsResponse.size(),
                     "questions", questionsResponse
             );
 
-            exchange.getMessage().setBody(mapper.writeValueAsString(gameData));
+            exchange.getMessage().setBody(gameData);
             team.players().forEach((playerId -> gameService.updateToInGame(playerId)));
         } else {
             exchange.getMessage().setBody(mapper.writeValueAsString(
@@ -82,15 +88,15 @@ public class GameCreationGateway {
         }
     }
 
-    public void handleUpdateToFinished(String teamId, Exchange exchange) throws Exception {
-        TeamResponseDto team = teamResponses.get(teamId);
+    public void handleUpdateToFinished(GameIsFinished data, Exchange exchange) throws Exception {
+        TeamResponseDto team = teamResponses.get(data.teamId());
         if (team != null) {
             team.players().forEach((playerId -> gameService.updateToFinished(playerId)));
-            teamResponses.remove(teamId);
+            teamResponses.remove(data.teamId());
         }
         else {
             exchange.getMessage().setBody(mapper.writeValueAsString(
-                    Map.of("error", "Team data not found for ID: " + teamId)
+                    Map.of("error", "Team data not found for ID: " + data.teamId())
             ));
             exchange.getMessage().setHeader(Exchange.HTTP_RESPONSE_CODE, 404);
         }

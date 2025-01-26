@@ -31,7 +31,7 @@ public class CamelRoutes extends RouteBuilder {
                 .setBody(simple("Error processing statistiques: ${exception.message}"))
                 .log("Erreur : ${exception.message}");
 
-        from("direct:statistiquesUpdate")
+        from("sjms2:statistiquesUpdate")
                 .log("Received JSON: ${body}")
                 .process(exchange -> {
                     String jsonInput = exchange.getIn().getBody(String.class);

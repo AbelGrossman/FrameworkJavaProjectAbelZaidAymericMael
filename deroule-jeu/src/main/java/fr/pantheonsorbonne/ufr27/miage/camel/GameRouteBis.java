@@ -24,7 +24,7 @@ public class GameRouteBis extends RouteBuilder {
 
     @Override
     public void configure() throws Exception {
-        from("sjms2:startGame")
+        from("sjms2:DerouleJeuService")
                 .unmarshal().json(JsonLibrary.Jackson, GameInitializationRequest.class)
                 .process(exchange -> {
                     GameInitializationRequest gameRequest = exchange.getIn().getBody(GameInitializationRequest.class);
@@ -53,14 +53,14 @@ public class GameRouteBis extends RouteBuilder {
 
                     // Statistics data
                     Map<String, Object> statisticsData = Map.of("playerResults", playerResults);
-                    exchange.setProperty("statistics", mapper.writeValueAsString(statisticsData));
+                    exchange.setProperty("statistics", statisticsData);
 
                     // Creation-partie data
                     String teamId = gameService.getTeamIdByGameId(gameId);
                     Map<String, Object> creationPartieData = Map.of(
                             "teamId", teamId,
                             "isOver", 1);
-                    exchange.setProperty("creationPartie", mapper.writeValueAsString(creationPartieData));
+                    exchange.setProperty("creationPartie", creationPartieData);
                     logger.info("Preparing to send game completion data for game ID: {}", gameId);
                 })
                 .multicast()
@@ -71,15 +71,15 @@ public class GameRouteBis extends RouteBuilder {
                     String statistics = exchange.getProperty("statistics", String.class);
                     exchange.getIn().setBody(statistics);
                     logger.info("Sending statistics data: {}", statistics);
-                })
-                .to("sjms2:statistiques");
+                }).marshal().json()
+                .to("sjms2:statistiquesUpdate");
 
         from("direct:sendToCreationPartie")
                 .process(exchange -> {
                     String creationPartie = exchange.getProperty("creationPartie", String.class);
                     exchange.getIn().setBody(creationPartie);
                     logger.info("Sending creation-partie data: {}", creationPartie);
-                })
-                .to("sjms2:creation-partie");
+                }).marshal().json()
+                .to("sjms2:DerouleJeuServiceFinished");
     }
 }

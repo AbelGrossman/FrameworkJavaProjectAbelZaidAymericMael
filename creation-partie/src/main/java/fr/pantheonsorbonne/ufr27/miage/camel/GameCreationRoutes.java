@@ -1,5 +1,6 @@
 package fr.pantheonsorbonne.ufr27.miage.camel;
 
+import fr.pantheonsorbonne.ufr27.miage.dto.GameIsFinished;
 import fr.pantheonsorbonne.ufr27.miage.dto.JoinGameRequest;
 import fr.pantheonsorbonne.ufr27.miage.dto.TeamResponseDto;
 import fr.pantheonsorbonne.ufr27.miage.gateway.GameCreationGateway;
@@ -45,7 +46,7 @@ public class GameCreationRoutes extends RouteBuilder {
 
         from("sjms2:DerouleJeuServiceFinished")
                 .log("Message reçue : ${body}")
-                .unmarshal().json(JsonLibrary.Jackson, List.class)
+                .unmarshal().json(JsonLibrary.Jackson, GameIsFinished.class)
                 .bean(gateway,"handleUpdateToFinished");
 
 
