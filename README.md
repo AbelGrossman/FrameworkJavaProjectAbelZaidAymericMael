@@ -4,11 +4,11 @@
 
 Bienvenue sur notre projet réalisé dans le cadre de la matière **INF2 - Java Framework** !
 Nous avons décidé de relever un défi amusant et technique : développer une application en **Java avec Quarkus**, inspirée du célèbre outil interactif **Kahoot**. 🏆
-Le jeu fonctionne par un système de parties thématiques. Chaque partie a un thème unique, et est composée de six joueurs.
+Le jeu fonctionne par un système de parties thématiques. Chaque partie a un thème unique, et est composée de six joueurs. Il s'agit d'un quizz jouable en multijoueur mais LOCAL --> chaque joueur aura sa propre page html pour répondre aux questions.
 
 ## 1. Objectif du Projet 🎯
 
-L'application vise à fournir une expérience ludique en proposant des **microservices sous forme de challenges et de jeux**. L'expèrience utilisateur se déroule uniquement sur une interface web.
+L'application vise à fournir une expérience ludique en proposant des **microservices sous forme de challenges et de jeux**. L'expérience utilisateur se déroule uniquement sur une interface web.
 
 Voici ce que notre application met à disposition, dans l'ordre :
 
