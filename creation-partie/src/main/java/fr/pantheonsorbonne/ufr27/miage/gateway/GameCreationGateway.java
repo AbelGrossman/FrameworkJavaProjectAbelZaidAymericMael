@@ -93,12 +93,7 @@ public class GameCreationGateway {
         if (team != null) {
             team.players().forEach((playerId -> gameService.updateToFinished(playerId)));
             teamResponses.remove(data.teamId());
-        }
-        else {
-            exchange.getMessage().setBody(mapper.writeValueAsString(
-                    Map.of("error", "Team data not found for ID: " + data.teamId())
-            ));
-            exchange.getMessage().setHeader(Exchange.HTTP_RESPONSE_CODE, 404);
+
         }
     }
     public void publishJoinRequest(JoinGameRequest request) throws Exception {
