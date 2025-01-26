@@ -93,18 +93,4 @@ public class GameDAOImpl implements GameDAO {
         entityManager.merge(playerResult);
         entityManager.flush();
     }
-
-    @Override
-    public Long findGameIdByPlayerId(String playerId) {
-        try {
-            return entityManager.createQuery(
-                            "SELECT g.id FROM Game g JOIN g.players p WHERE p.playerId = :playerId AND g.isOver = false",
-                            Long.class)
-                    .setParameter("playerId", playerId)
-                    .getSingleResult();
-        } catch (Exception e) {
-            logger.error("Error finding game ID for player: {}", playerId, e);
-            return null;
-        }
-    }
 }
