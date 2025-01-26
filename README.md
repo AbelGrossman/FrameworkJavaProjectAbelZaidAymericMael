@@ -78,6 +78,7 @@ Ce lien vous renverra vers la page principale.
 --- 
 
 ## 4. Diagramme de Séquence
+![image](https://github.com/user-attachments/assets/ff1f7fe6-8c94-46f7-a170-b0997b440947)
 
 ---
 
