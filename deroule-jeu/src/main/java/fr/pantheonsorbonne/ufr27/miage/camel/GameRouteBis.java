@@ -67,19 +67,29 @@ public class GameRouteBis extends RouteBuilder {
                 .to("direct:sendToStatistics", "direct:sendToCreationPartie");
 
         from("direct:sendToStatistics")
-                .process(exchange -> {
-                    String statistics = exchange.getProperty("statistics", String.class);
-                    exchange.getIn().setBody(statistics);
-                    logger.info("Sending statistics data: {}", statistics);
-                }).marshal().json()
-                .to("sjms2:statistiquesUpdate");
+        .process(exchange -> {
+            Map<String, Object> statisticsData = exchange.getProperty("statistics", Map.class);
+            ObjectMapper mapper = new ObjectMapper();
+            String json = mapper.writeValueAsString(statisticsData.get("playerResults")); // Extract and serialize playerResults
+            exchange.getIn().setBody(json);
+            logger.info("Sending statistics data: {}", json);
+        })
+        .to("sjms2:statistiquesUpdate");
+            
 
         from("direct:sendToCreationPartie")
-                .process(exchange -> {
-                    String creationPartie = exchange.getProperty("creationPartie", String.class);
-                    exchange.getIn().setBody(creationPartie);
-                    logger.info("Sending creation-partie data: {}", creationPartie);
-                }).marshal().json()
-                .to("sjms2:DerouleJeuServiceFinished");
+        .process(exchange -> {
+            Map<String, Object> creationPartie = exchange.getProperty("creationPartie", Map.class);
+
+            // Serialize the creationPartie map into JSON using Jackson
+            ObjectMapper mapper = new ObjectMapper();
+            String json = mapper.writeValueAsString(creationPartie);
+
+            // Set the serialized JSON as the message body
+            exchange.getIn().setBody(json);
+            logger.info("Sending creation-partie data: {}", json);
+        })
+        .to("sjms2:DerouleJeuServiceFinished");
+
     }
 }
