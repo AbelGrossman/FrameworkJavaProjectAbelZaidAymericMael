@@ -1,6 +1,5 @@
 # README
 
-```markdown
 # 📚 Projet INF2 - Java Framework : Mini-Kahoot en Quarkus 🎮
 
 Bienvenue sur notre projet réalisé dans le cadre de la matière **INF2 - Java Framework** !
@@ -74,11 +73,14 @@ Quarkus facilite le développement avec son mode live-coding 🚀. Pour démarre
 Votre application sera accessible à l'adresse :
 
 [http://localhost:8080](http://localhost:8080/)
+
 Ce lien vous renverra vers la page principale.
 
 --- 
 
 ## 4. Diagramme de Séquence
+
+---
 
 ## 4. Démo
 
