@@ -68,6 +68,8 @@ public class GameCreationGateway {
             );
 
             exchange.getMessage().setBody(gameData);
+            exchange.getMessage().setHeader("teamId" , teamId);
+
             team.getPlayers().forEach(playerId -> gameService.updateToInGame(playerId));
         }
     }

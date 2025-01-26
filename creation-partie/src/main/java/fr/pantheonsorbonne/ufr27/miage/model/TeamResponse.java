@@ -15,7 +15,7 @@ public class TeamResponse {
     private String theme;
     private String difficulty;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "team_response_players", // Changed table name
             joinColumns = @JoinColumn(name = "team_id")
