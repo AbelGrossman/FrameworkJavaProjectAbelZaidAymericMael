@@ -110,7 +110,7 @@ class CamelRoutesTest {
     public void testStatistiquesUpdateList() {
         String jsonInput = "[{\"playerId\":\"12345\",\"score\":25,\"gameId\":67890,\"averageResponseTime\":56,\"category\":\"General Knowledge\",\"totalQuestions\":25,\"rank\":1},{\"playerId\":\"67890\",\"score\":80,\"gameId\":67890,\"averageResponseTime\":72,\"category\":\"General Knowledge\",\"totalQuestions\":10,\"rank\":2}]";
         String jsonInput2 = "[{\"playerId\":\"12345\",\"score\":0,\"gameId\":67990,\"averageResponseTime\":44,\"category\":\"Feur\",\"totalQuestions\":25,\"rank\":5},{\"playerId\":\"69894\",\"score\":80,\"gameId\":67890,\"averageResponseTime\":72,\"category\":\"General Knowledge\",\"totalQuestions\":10,\"rank\":2}]";
-        Exchange exchange = producerTemplate.request("direct:statistiquesUpdate", ex -> {
+        Exchange exchange = producerTemplate.request("sjms2:statistiquesUpdate", ex -> {
             ex.getIn().setBody(jsonInput);
         });
 
@@ -141,7 +141,7 @@ class CamelRoutesTest {
         assertEquals(1, themeStats2.getNbPartie());
         //assertEquals(8.0, themeStats2.getScoreMoyen(), 0.01);
 
-        Exchange exchange2 = producerTemplate.request("direct:statistiquesUpdate", ex -> {
+        Exchange exchange2 = producerTemplate.request("sjms2:statistiquesUpdate", ex -> {
             ex.getIn().setBody(jsonInput2);
         });
         // Vérifier que l'échange s'est bien passé
