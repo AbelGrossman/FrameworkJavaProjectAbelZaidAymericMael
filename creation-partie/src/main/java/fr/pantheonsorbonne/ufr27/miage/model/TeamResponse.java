@@ -14,8 +14,11 @@ public class TeamResponse {
     private String theme;
     private String difficulty;
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "team_players", joinColumns = @JoinColumn(name = "team_id"))
+    @ElementCollection
+    @CollectionTable(
+            name = "team_players",
+            joinColumns = @JoinColumn(name = "team_id")
+    )
     @Column(name = "player_id")
     private List<Long> players = new ArrayList<>();
 

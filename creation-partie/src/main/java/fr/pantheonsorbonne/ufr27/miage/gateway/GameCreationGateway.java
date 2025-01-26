@@ -34,7 +34,6 @@ public class GameCreationGateway {
     TeamResponseDao teamResponseDao;
 
     private final ObjectMapper mapper = new ObjectMapper();
-    private final ConcurrentHashMap<String, TeamResponseDto> teamResponses = new ConcurrentHashMap<>();
 
     public void handlePlayerRequest(JoinGameRequest body, Exchange exchange) throws Exception {
 
