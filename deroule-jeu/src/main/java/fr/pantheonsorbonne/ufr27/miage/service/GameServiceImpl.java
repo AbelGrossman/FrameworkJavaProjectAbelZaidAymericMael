@@ -86,16 +86,7 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public List<QuestionDTO> getQuestionsForGame(String playerId) {
-        if (currentGame == null) {
-            // Try to find game from database
-            Long gameId = gameDAO.findGameIdByPlayerId(playerId);
-            if (gameId != null) {
-                currentGame = gameDAO.findById(gameId)
-                        .orElseThrow(() -> new GameException.GameNotInitializedException());
-            } else {
-                throw new GameException.GameNotInitializedException();
-            }
-        }
+        ensureGameLoaded(playerId);
 
         if (!isPlayerAllowed(playerId)) {
             throw new GameException.PlayerNotAllowedException(playerId);
@@ -174,6 +165,8 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public int processAnswer(String playerId, String answer, long responseTime) {
+        ensureGameLoaded(playerId);
+
         if (currentGame == null) {
             throw new GameException.GameNotInitializedException();
         }
@@ -247,6 +240,8 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public Map<String, Object> getCurrentGameState(String playerId) {
+        ensureGameLoaded(playerId);
+
         Map<String, Object> gameState = new HashMap<>();
         gameState.put("currentQuestionIndex", currentQuestionIndex.get());
 
@@ -296,6 +291,8 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public int getPlayerScore(String playerId) {
+        ensureGameLoaded(playerId);
+
         Player player = getPlayerById(currentGame, playerId);
         if (player == null) {
             throw new GameException.PlayerNotFoundException(playerId);
@@ -305,6 +302,8 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public void incrementScore(String playerId) {
+        ensureGameLoaded(playerId);
+
         Player player = getPlayerById(currentGame, playerId);
         if (player == null) {
             throw new GameException.PlayerNotFoundException(playerId);
@@ -377,5 +376,19 @@ public class GameServiceImpl implements GameService {
     @Override
     public String getTeamIdByGameId(Long gameId) {
         return gameDAO.findTeamIdByGameId(gameId);
+    }
+
+    private void ensureGameLoaded(String playerId) {
+        if (currentGame == null) {
+            Long gameId = gameDAO.findGameIdByPlayerId(playerId);
+            if (gameId != null) {
+                currentGame = gameDAO.findById(gameId)
+                        .orElseThrow(() -> new GameException.GameNotInitializedException());
+                currentGameId = gameId;
+                gameId = currentGameId;
+            } else {
+                throw new GameException.GameNotInitializedException();
+            }
+        }
     }
 }
