@@ -153,21 +153,17 @@
         const registerButton = document.querySelector('button[onclick="showContainer(\'register\')"]');
 
         if (currentUser) {
-            // Show game-related buttons
             gameButton.style.display = 'inline';
             leaveButton.style.display = 'inline';
             logoutButton.style.display = 'inline';
-            // Hide auth buttons
             loginButton.style.display = 'none';
             registerButton.style.display = 'none';
             showContainer('game');
             startStatusCheck();
         } else {
-            // Hide game-related buttons
             gameButton.style.display = 'none';
             leaveButton.style.display = 'none';
             logoutButton.style.display = 'none';
-            // Show auth buttons
             loginButton.style.display = 'inline';
             registerButton.style.display = 'inline';
             showContainer('login');
@@ -304,11 +300,16 @@
             const data = await response.json();
 
             if (response.ok) {
-                document.getElementById('statusContainer').innerHTML = `
+                if (data.status === 'IN_GAME') {
+                    // Redirect to game page with playerId
+                    window.location.href = `http://localhost:8081/game.html?playerId=${currentUser.id}`;
+                } else {
+                    document.getElementById('statusContainer').innerHTML = `
                         <div class="alert alert-success">
                             Status: ${data.status}
                         </div>
                     `;
+                }
             }
         } catch (error) {
             console.error('Error checking status:', error);
