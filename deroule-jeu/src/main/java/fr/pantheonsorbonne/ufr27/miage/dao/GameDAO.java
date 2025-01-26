@@ -13,4 +13,6 @@ public interface GameDAO {
     String findTeamIdByGameId(Long gameId);
     boolean playerResultExists(String playerId, Long gameId);
     void updatePlayerResult(PlayerResult playerResult);
+    Long findGameIdByPlayerId(String playerId);
+
 }

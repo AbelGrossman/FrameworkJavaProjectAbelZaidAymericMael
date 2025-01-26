@@ -9,7 +9,7 @@ public interface GameService {
     Long initializeGame(List<String> playerIds, String category, String difficulty, int totalQuestions,
             List<QuestionDTO> questions, String teamId);
 
-    long getCurrentGameId();
+    long getCurrentGameId(String playerId);
 
     int processAnswer(String playerId, String answer, long responseTime);
 

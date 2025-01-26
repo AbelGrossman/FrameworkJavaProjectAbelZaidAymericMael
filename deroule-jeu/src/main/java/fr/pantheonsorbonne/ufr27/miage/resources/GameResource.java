@@ -58,7 +58,7 @@ public class GameResource {
     @APIResponse(responseCode = "200", description = "Current game ID retrieved successfully")
     public Response getCurrentGameID(@QueryParam("playerId") String playerId) {
         try {
-            Long gameId = gameService.getCurrentGameId();
+            Long gameId = gameService.getCurrentGameId(playerId);
             return Response.ok(Map.of("gameId", gameId)).build();
         } catch (RuntimeException e) {
             return Response.status(Response.Status.BAD_REQUEST)

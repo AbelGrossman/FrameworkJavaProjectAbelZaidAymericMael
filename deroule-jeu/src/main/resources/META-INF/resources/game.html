@@ -130,27 +130,32 @@
         let questionCount = 0;
 
         function initializeGame() {
-            const playerId = urlParams.get('playerId');
-
-            fetch(`/game/state?playerId=${playerId}`)
+            getGameId()
+                .then(() => {
+                    return fetch(`/game/state?playerId=${playerId}`);
+                })
                 .then(response => response.json())
                 .then(data => {
-                    fetchQuestions();
+                    currentQuestionIndex = data.currentQuestionIndex;
+                    return fetchQuestions();
+                })
+                .then(() => {
+                    startGameStatePolling();
                 })
                 .catch(error => console.error('Error initializing game:', error));
         }
 
-        function getGameId() {
-            fetch(`/game/currentGameID`)
-                .then(response => response.json())
-                .then(data => {
-                    gameId = data.gameId;
-                    console.log('Game ID received:', gameId);
-                    localStorage.setItem('gameId', gameId);
-                    document.getElementById('game-title').innerText = `Quiz Game ${gameId}`;
-                    fetchQuestions();
-                })
-                .catch(error => console.error('Error initializing game:', error));
+        async function getGameId() {
+            const response = await fetch(`/game/currentGameID?playerId=${playerId}`);
+            const data = await response.json();
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            gameId = data.gameId;
+            console.log('Game ID received:', gameId);
+            localStorage.setItem('gameId', gameId);
+            document.getElementById('game-title').innerText = `Quiz Game ${gameId}`;
+            return gameId;
         }
 
         function updateGameState() {
@@ -379,7 +384,7 @@
                                         ).join('')}
                         </table>
                         <br>
-                        <button onclick="window.location.href='/'" class="answer-button">Return to Home</button>
+                        <button onclick="window.location.href='http://localhost:8080'" class="answer-button">Return to Home</button>
                     `;
                                 leaderboardDiv.innerHTML = leaderboardHtml;
                             });
@@ -393,9 +398,7 @@
                 });
         }
 
-        // Start the game by initializing it
         initializeGame();
-        getGameId();
     </script>
 </body>
 

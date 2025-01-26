@@ -123,10 +123,13 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public long getCurrentGameId() {
+    public long getCurrentGameId(String playerId) {
+        Long gameId = gameDAO.findGameIdByPlayerId(playerId);
+        if (gameId == null) {
+            throw new GameException.GameNotInitializedException();
+        }
         return gameId;
     }
-
     private List<Player> retrievePlayers(List<String> playerIds) {
         return playerIds.stream()
                 .map(id -> new Player(id, "Player " + id))
