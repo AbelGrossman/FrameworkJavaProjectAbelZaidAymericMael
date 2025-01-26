@@ -44,4 +44,22 @@ public class GameException extends RuntimeException {
             super("No results found for game " + gameId);
         }
     }
+
+    public static class InvalidPlayerCountException extends GameException {
+        public InvalidPlayerCountException() {
+            super("Game must have exactly 6 players.");
+        }
+    }
+
+    public static class InvalidTotalQuestionsException extends GameException {
+        public InvalidTotalQuestionsException() {
+            super("Total questions must be greater than 0.");
+        }
+    }
+
+    public static class QuestionCountMismatchException extends GameException {
+        public QuestionCountMismatchException() {
+            super("Number of questions does not match totalQuestions.");
+        }
+    }
 }

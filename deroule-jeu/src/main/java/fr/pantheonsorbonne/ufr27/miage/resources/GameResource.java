@@ -4,6 +4,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 import jakarta.inject.Inject;
 import fr.pantheonsorbonne.ufr27.miage.service.GameService;
+import io.vertx.core.cli.annotations.Hidden;
 import fr.pantheonsorbonne.ufr27.miage.dto.GameInitializationRequest;
 import fr.pantheonsorbonne.ufr27.miage.dto.PlayerResultsRequest;
 import fr.pantheonsorbonne.ufr27.miage.dto.QuestionDTO;
@@ -137,7 +138,7 @@ public class GameResource {
 
     @POST
     @Path("/finish")
-    @Operation(summary = "Finish the game")
+    @Operation(summary = "Finish the game, dont call it on the API ! It is supposed to be automatically called at the end of the game ")
     @APIResponse(responseCode = "200", description = "Game finished successfully")
     public Response finishGame(@QueryParam("gameId") Long gameId) {
         try {

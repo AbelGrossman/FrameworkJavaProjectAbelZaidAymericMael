@@ -15,9 +15,9 @@ import java.util.List;
 import java.util.Map;
 
 @ApplicationScoped
-public class GameRouteBis extends RouteBuilder {
+public class GameRoute extends RouteBuilder {
 
-    private static final Logger logger = LoggerFactory.getLogger(GameRouteBis.class);
+    private static final Logger logger = LoggerFactory.getLogger(GameRoute.class);
 
     @Inject
     GameService gameService;
@@ -81,11 +81,9 @@ public class GameRouteBis extends RouteBuilder {
         .process(exchange -> {
             Map<String, Object> creationPartie = exchange.getProperty("creationPartie", Map.class);
 
-            // Serialize the creationPartie map into JSON using Jackson
             ObjectMapper mapper = new ObjectMapper();
             String json = mapper.writeValueAsString(creationPartie);
 
-            // Set the serialized JSON as the message body
             exchange.getIn().setBody(json);
             logger.info("Sending creation-partie data: {}", json);
         })

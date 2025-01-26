@@ -59,10 +59,8 @@ public class GameServiceImpl implements GameService {
             List<Player> players = retrievePlayers(playerIds);
             currentGame = new Game(category, difficulty, players, totalQuestions, new ArrayList<>(), teamId);
 
-            // Save game first to get ID
             gameDAO.save(currentGame);
 
-            // Create and save questions with game association
             List<Question> questions = questionsDTO.stream()
                     .map(q -> new Question(q.type(), q.difficulty(), q.category(),
                             q.question(), q.correct_answer(), q.incorrect_answers()))
@@ -86,7 +84,9 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public List<QuestionDTO> getQuestionsForGame(String playerId) {
-        ensureGameLoaded(playerId);
+        if (currentGame == null) {
+            throw new GameException.GameNotInitializedException();
+        }
 
         if (!isPlayerAllowed(playerId)) {
             throw new GameException.PlayerNotAllowedException(playerId);
@@ -101,13 +101,13 @@ public class GameServiceImpl implements GameService {
 
     private void validateGameParameters(List<String> playerIds, int totalQuestions, List<QuestionDTO> questions) {
         if (playerIds == null || playerIds.size() != 6) {
-            throw new IllegalArgumentException("Game must have exactly 6 players.");
+            throw new GameException.InvalidPlayerCountException();
         }
         if (totalQuestions <= 0) {
-            throw new IllegalArgumentException("Total questions must be greater than 0.");
+            throw new GameException.InvalidTotalQuestionsException();
         }
         if (questions == null || questions.size() != totalQuestions) {
-            throw new IllegalArgumentException("Number of questions does not match totalQuestions.");
+            throw new GameException.QuestionCountMismatchException();
         }
     }
 
@@ -162,7 +162,6 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public int processAnswer(String playerId, String answer, long responseTime) {
-        ensureGameLoaded(playerId);
 
         if (currentGame == null) {
             throw new GameException.GameNotInitializedException();
@@ -237,7 +236,6 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public Map<String, Object> getCurrentGameState(String playerId) {
-        ensureGameLoaded(playerId);
 
         Map<String, Object> gameState = new HashMap<>();
         gameState.put("currentQuestionIndex", currentQuestionIndex.get());
@@ -288,7 +286,6 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public int getPlayerScore(String playerId) {
-        ensureGameLoaded(playerId);
 
         Player player = getPlayerById(currentGame, playerId);
         if (player == null) {
@@ -299,7 +296,6 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public void incrementScore(String playerId) {
-        ensureGameLoaded(playerId);
 
         Player player = getPlayerById(currentGame, playerId);
         if (player == null) {
@@ -375,17 +371,4 @@ public class GameServiceImpl implements GameService {
         return gameDAO.findTeamIdByGameId(gameId);
     }
 
-    private void ensureGameLoaded(String playerId) {
-        if (currentGame == null) {
-            Long gameId = gameDAO.findGameIdByPlayerId(playerId);
-            if (gameId != null) {
-                currentGame = gameDAO.findById(gameId)
-                        .orElseThrow(() -> new GameException.GameNotInitializedException());
-                currentGameId = gameId;
-                gameId = currentGameId;
-            } else {
-                throw new GameException.GameNotInitializedException();
-            }
-        }
-    }
 }
