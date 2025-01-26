@@ -2,10 +2,9 @@ package fr.pantheonsorbonne.ufr27.miage.model;
 
 
 import fr.pantheonsorbonne.ufr27.miage.dto.TeamResponseDto;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -15,8 +14,10 @@ public class TeamResponse {
     private String theme;
     private String difficulty;
 
-    @ElementCollection
-    private List<Long> players;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "team_players", joinColumns = @JoinColumn(name = "team_id"))
+    @Column(name = "player_id")
+    private List<Long> players = new ArrayList<>();
 
     public TeamResponse() {}
 
